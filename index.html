@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>KR BURGER &amp; PIZZA · Pedidos por WhatsApp</title>
-  <meta name="description" content="Hamburguesas y pizzas hechas al momento. Armá tu pedido de KR BURGER &amp; PIZZA y enviálo por WhatsApp. Asunción, Paraguay.">
-  <meta name="theme-color" content="#ff8a3d">
+  <meta name="description" content="Hamburguesas, pizzas, combos, bebidas y cervezas de KR BURGER &amp; PIZZA. Armá tu pedido y enviálo por WhatsApp. Asunción, Paraguay.">
+  <meta name="theme-color" content="#f5c518">
   <meta property="og:type" content="website">
   <meta property="og:title" content="KR BURGER &amp; PIZZA">
   <meta property="og:description" content="Hamburguesas y pizzas hechas al momento. Pedí por WhatsApp.">
@@ -20,7 +20,7 @@
   <!-- Cliente: KR BURGER | Creado por FERLOKER INDUSTRY | Fecha: 2026-11-10 -->
   <a class="saltar" href="#catalogo">Saltar al menú</a>
 
-  <!-- (a) Splash: negro absoluto + capa de tabla periódica animada detrás del contenido -->
+  <!-- Splash: negro absoluto + capa de tabla periódica animada detrás del contenido -->
   <div class="splash" id="splash">
     <div class="splash-tabla" aria-hidden="true">
       <svg class="tabla-svg" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" focusable="false" role="presentation">
@@ -73,7 +73,7 @@
       <a class="marca" href="#catalogo">
         <img class="marca-logo" src="assets/ui/logo-kr.svg" alt="" width="240" height="240">
         <span class="marca-textos">
-          <h1 class="marca-nombre" id="negocio-nombre">KR BURGER &amp; PIZZA</h1>
+          <p class="marca-nombre" id="negocio-nombre">KR BURGER &amp; PIZZA</p>
           <span class="marca-tagline" id="negocio-tagline">Hamburguesas y pizzas hechas al momento</span>
         </span>
       </a>
@@ -86,7 +86,6 @@
         <span class="badge-carrito" id="contador-carrito">0</span>
       </button>
     </header>
-    <nav class="barra-tabs" id="tabs" role="tablist" aria-label="Categorías del menú"></nav>
   </div>
 
   <main class="catalogo" id="catalogo" tabindex="-1">
@@ -95,16 +94,82 @@
       <p>Estamos actualizando el menú. Volvé en un momento.</p>
       <button class="boton-secundario" id="reintentar" type="button">Reintentar</button>
     </div>
-    <div id="secciones-catalogo"></div>
+
+    <!-- Pantalla 1: ¿qué se te antoja hoy? Combos + categorías -->
+    <div class="pantalla" id="pantalla-categorias" aria-hidden="false">
+      <header class="portada">
+        <p class="portada-kicker" id="portada-kicker">KR BURGER &amp; PIZZA</p>
+        <h1 class="portada-titulo" id="titulo-portada" tabindex="-1">¿Qué se te antoja hoy?</h1>
+        <p class="portada-tagline" id="portada-tagline">Hamburguesas y pizzas hechas al momento</p>
+        <p class="portada-horario" id="portada-horario">Martes a domingo · 19:00 a 01:00</p>
+      </header>
+
+      <section class="seccion" id="combos-destacados" aria-labelledby="titulo-combos">
+        <div class="seccion-cabecera">
+          <h2 class="seccion-titulo" id="titulo-combos">Combos</h2>
+          <p class="seccion-subtitulo">Para compartir o pedir completo</p>
+        </div>
+        <div class="carrusel" id="carrusel-combos"></div>
+      </section>
+
+      <nav class="seccion" id="nav-categorias" role="tablist" aria-label="Categorías del menú"></nav>
+
+      <section class="seccion" id="ubicacion" aria-labelledby="titulo-ubicacion">
+        <div class="seccion-cabecera">
+          <h2 class="seccion-titulo" id="titulo-ubicacion">Ubicación</h2>
+          <p class="seccion-subtitulo">Te esperamos o te lo llevamos</p>
+        </div>
+        <div class="tarjeta-ios">
+          <dl class="datos-ubicacion">
+            <div class="dato">
+              <dt>Dirección</dt>
+              <dd id="ubicacion-direccion">Av. Mariscal López 1234, Asunción</dd>
+            </div>
+            <div class="dato">
+              <dt>Referencia</dt>
+              <dd id="ubicacion-referencia">A dos cuadras de la plaza central · zona céntrica</dd>
+            </div>
+            <div class="dato">
+              <dt>Horario</dt>
+              <dd id="ubicacion-horario">Martes a domingo · 19:00 a 01:00</dd>
+            </div>
+            <div class="dato">
+              <dt>Delivery</dt>
+              <dd id="ubicacion-delivery">Delivery en zona céntrica · 30 a 45 min</dd>
+            </div>
+          </dl>
+          <a class="boton-mapa" id="link-mapa" href="#" target="_blank" rel="noopener" aria-label="Abrir la ubicación en Google Maps">
+            <svg class="icono-mapa" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path d="M12 21s-6.5-5.4-6.5-10.2a6.5 6.5 0 1 1 13 0C18.5 15.6 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+              <circle cx="12" cy="10.6" r="2.4" fill="currentColor"></circle>
+            </svg>
+            Abrir en Google Maps
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- Pantalla 2: catálogo de la categoría elegida -->
+    <div class="pantalla" id="pantalla-catalogo" aria-hidden="true" hidden>
+      <div class="catalogo-nav">
+        <button class="boton-volver" id="volver-categorias" type="button">‹ Categorías</button>
+      </div>
+      <section class="seccion" id="seccion-productos" aria-labelledby="titulo-productos">
+        <div class="seccion-cabecera">
+          <h2 class="seccion-titulo" id="titulo-productos">Hamburguesas</h2>
+          <p class="aviso-alcohol" id="aviso-alcohol" hidden>Venta de alcohol solo a mayores de 18 años</p>
+        </div>
+        <div id="paneles-productos"></div>
+      </section>
+    </div>
   </main>
 
   <footer class="pie">
-    <p id="pie-horario">Martes a domingo · 19:00 a 01:00</p>
-    <p id="pie-direccion">Asunción, Paraguay</p>
-    <p class="pie-nota">Pedidos por WhatsApp · KR BURGER &amp; PIZZA</p>
+    <p class="pie-nota">Pedidos por WhatsApp · Asunción, Paraguay</p>
+    <p class="pie-credito">KR BURGER &amp; PIZZA · Hecho por FERLOKER INDUSTRY</p>
   </footer>
 
-  <!-- (c) Ficha de producto: opciones, cantidad y total en vivo -->
+  <!-- Ficha de producto: opciones, cantidad y total en vivo -->
   <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">
     <div class="dp-caja">
       <div class="dp-figura">
@@ -113,8 +178,12 @@
       </div>
       <div class="dp-cuerpo">
         <p class="dp-etiqueta" id="dp-etiqueta"></p>
-        <h2 class="dp-titulo" id="dp-titulo">Producto</h2>
+        <div class="dp-titulo-fila">
+          <h2 class="dp-titulo" id="dp-titulo">Producto</h2>
+          <span class="badge badge-18" id="dp-badge-18" hidden>18+</span>
+        </div>
         <p class="dp-descripcion" id="dp-descripcion"></p>
+        <p class="dp-alcohol" id="dp-alcohol" hidden>Venta de alcohol solo a mayores de 18 años.</p>
         <p class="dp-precio" id="dp-precio"></p>
         <div class="dp-opciones" id="dp-opciones"></div>
         <div class="dp-pedido">
@@ -129,7 +198,7 @@
     </div>
   </dialog>
 
-  <!-- (d) Carrito: drawer derecho con líneas, sugerencias, total y pedido por WhatsApp -->
+  <!-- Carrito: drawer derecho con líneas, sugerencias, total y pedido por WhatsApp -->
   <dialog class="dialogo dialogo-carrito" id="dialogo-carrito" aria-labelledby="dc-titulo">
     <div class="drawer">
       <header class="drawer-cabecera">
@@ -157,6 +226,10 @@
           <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Delivery" checked> Delivery</label>
           <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Retiro en el local"> Retiro en el local</label>
         </fieldset>
+        <label class="campo-nota" for="nota-pedido">
+          <span class="campo-nota-titulo">Nota (opcional)</span>
+          <input class="campo-nota-input" id="nota-pedido" type="text" maxlength="140" autocomplete="off" placeholder="Ej.: sin cebolla">
+        </label>
         <p class="nota" id="nota-whatsapp">El pedido se abre en WhatsApp. El carrito queda guardado en este dispositivo.</p>
         <button class="boton-primario boton-whatsapp" id="btn-whatsapp" type="button" disabled>Pedir por WhatsApp</button>
       </footer>

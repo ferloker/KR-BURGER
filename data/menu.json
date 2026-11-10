@@ -6,9 +6,15 @@
     "whatsapp": "595993417072",
     "moneda": "Gs",
     "horario": "Martes a domingo · 19:00 a 01:00",
-    "direccion": "Asunción, Paraguay",
+    "direccion": "Av. Mariscal López 1234, Asunción",
     "tagline": "Hamburguesas y pizzas hechas al momento",
-    "mensaje_cierre": "¡Gracias por tu pedido!"
+    "mensaje_cierre": "¡Gracias por tu pedido!",
+    "ubicacion": {
+      "direccion": "Av. Mariscal López 1234, Asunción",
+      "referencia": "A dos cuadras de la plaza central · zona céntrica",
+      "delivery": "Delivery en zona céntrica · 30 a 45 min",
+      "mapa_url": "https://maps.google.com/?q=KR+Burger+Asuncion"
+    }
   },
   "borde_precio": 10000,
   "extras": [
@@ -23,6 +29,7 @@
     {
       "id": "hamburguesas",
       "nombre": "Hamburguesas",
+      "icono": "/assets/hamburguesas/maximum-burger.png",
       "items": [
         {
           "id": "maximum-burger",
@@ -73,6 +80,7 @@
     {
       "id": "pizzas",
       "nombre": "Pizzas",
+      "icono": "/assets/pizzas/muzzarella.png",
       "items": [
         {
           "id": "muzzarella",
@@ -127,6 +135,7 @@
     {
       "id": "acompanantes",
       "nombre": "Acompañantes",
+      "icono": "/assets/acompanantes/papas-cheddar.png",
       "items": [
         {
           "id": "papas-fritas",
@@ -177,6 +186,7 @@
     {
       "id": "bebidas",
       "nombre": "Bebidas",
+      "icono": "/assets/bebidas/coca-cola-1l.png",
       "items": [
         {
           "id": "coca-cola-1l",
@@ -207,6 +217,49 @@
           "precio": 5000,
           "imagen": "/assets/bebidas/agua-500ml.png",
           "tipo": "bebida",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "coca-cola-2l",
+          "nombre": "Coca-Cola 2 L",
+          "descripcion": "Botella de 2 litros para compartir, bien fría.",
+          "precio": 15000,
+          "imagen": "/assets/bebidas/coca-cola-2l.png",
+          "tipo": "bebida",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        }
+      ]
+    },
+    {
+      "id": "cervezas",
+      "nombre": "Cervezas",
+      "icono": "/assets/bebidas/cerveza-pilsen-500ml.png",
+      "aviso": "Venta de alcohol solo a mayores de 18 años",
+      "items": [
+        {
+          "id": "cerveza-pilsen-500ml",
+          "nombre": "Cerveza Pilsen 500 ml",
+          "descripcion": "Lager nacional de 500 ml, bien fría. Solo mayores de 18.",
+          "precio": 12000,
+          "imagen": "/assets/bebidas/cerveza-pilsen-500ml.png",
+          "tipo": "cerveza",
+          "alcohol": true,
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "cerveza-ipa-500ml",
+          "nombre": "Cerveza IPA 500 ml",
+          "descripcion": "IPA artesanal de 500 ml, notas cítricas. Solo mayores de 18.",
+          "precio": 15000,
+          "imagen": "/assets/bebidas/cerveza-ipa-500ml.png",
+          "tipo": "cerveza",
+          "alcohol": true,
           "extras": [],
           "destacado": false,
           "agotado": false
@@ -243,6 +296,16 @@
       "imagen": "/assets/combos/combo-pizza.png",
       "incluye": ["muzzarella", "coca-cola-500ml"],
       "destacado": false,
+      "agotado": false
+    },
+    {
+      "id": "combo-pizza-full",
+      "nombre": "Combo Pizza Full",
+      "descripcion": "Pizza muzzarella + papas con cheddar + Coca-Cola 1 L.",
+      "precio": 80000,
+      "imagen": "/assets/combos/combo-pizza-full.png",
+      "incluye": ["muzzarella", "papas-cheddar", "coca-cola-1l"],
+      "destacado": true,
       "agotado": false
     }
   ],

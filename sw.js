@@ -1,8 +1,9 @@
 'use strict';
-/* KR BURGER & PIZZA — service worker sin dependencias.
+/* KR BURGER & PIZZA — service worker sin dependencias (v2).
    Cache-first para los estáticos de la cápsula y network-first para ./data/.
-   Nada bajo /app/ se cachea a propósito (admin y scripts del taller). */
-const VERSION = 'v1';
+   Nada bajo /app/ se cachea a propósito (admin y scripts del taller).
+   VERSION v2 invalida el cache de la primera iteración. */
+const VERSION = 'v2';
 const CACHE_ESTATICOS = `kr-burger-estaticos-${VERSION}`;
 const CACHE_DATOS = `kr-burger-datos-${VERSION}`;
 const ESTATICOS = [
@@ -12,7 +13,8 @@ const ESTATICOS = [
   'app.js',
   'manifest.json',
   'assets/ui/icono-192.png',
-  'assets/ui/icono-512.png'
+  'assets/ui/icono-512.png',
+  'assets/ui/logo-kr.svg'
 ];
 
 self.addEventListener('install', (evento) => {

@@ -1,15 +1,15 @@
 {
   "name": "KR BURGER & PIZZA",
   "short_name": "KR BURGER",
-  "description": "Hamburguesas y pizzas hechas al momento. Armá tu pedido y enviálo por WhatsApp.",
+  "description": "Hamburguesas, pizzas, combos y bebidas hechos al momento. Armá tu pedido y enviálo por WhatsApp.",
   "lang": "es",
   "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#ff8a3d",
+  "background_color": "#0a0a0a",
+  "theme_color": "#f5c518",
   "icons": [
     {
       "src": "/assets/ui/icono-192.png",

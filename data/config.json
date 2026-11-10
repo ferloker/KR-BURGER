@@ -3,7 +3,9 @@
   "whatsapp": "595993417072",
   "moneda": "Gs",
   "tema": "breaking-bad",
-  "color_fondo": "#000000",
-  "color_acento": "#ff8a3d",
-  "color_texto": "#f5efe8"
+  "color_fondo": "#0a0a0a",
+  "color_acento": "#f5c518",
+  "color_texto": "#f5f5f5",
+  "color_panel": "#1a1a1a",
+  "color_verde": "#2e8b57"
 }

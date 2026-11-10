@@ -1,24 +1,29 @@
 'use strict';
-/* KR BURGER & PIZZA — frontend público sin dependencias.
-   Carga data/menu.json y data/config.json, renderiza el catálogo con createElement
-   y textContent (sin HTML crudo con datos), maneja el carrito en localStorage y
-   arma el pedido de WhatsApp. Los diálogos usan <dialog> nativo. */
+/* KR BURGER & PIZZA — frontend público v2 (Directiva Parte 4), sin dependencias.
+   Dos pantallas: categorías (combos + tiles) y catálogo por categoría.
+   Paleta Breaking Bad desde config.json, render con createElement/textContent,
+   carrito en localStorage, diálogos <dialog> nativos y pedido estructurado por WhatsApp. */
 (() => {
   const CLAVE_CARRITO = 'kr-burger-carrito-v1';
   const MAX_CANTIDAD = 99;
+  const ID_CATEGORIA_INICIAL = 'hamburguesas';
   const MAPA_COLORES = {
     color_fondo: '--fondo',
     color_acento: '--acento',
-    color_texto: '--texto'
+    color_texto: '--texto',
+    color_panel: '--panel',
+    color_verde: '--verde'
   };
   const formateador = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 });
   const estado = {
     menu: null,
     config: null,
     categorias: [],
+    combos: [],
     lineas: [],
     producto: null,
     categoriaActiva: null,
+    pantalla: 'categorias',
     temporizadorToast: null
   };
 
@@ -57,8 +62,37 @@
     return new URL(ruta.trim().replace(/^\/+/, ''), document.baseURI).href;
   }
 
+  function urlSegura(valor) {
+    if (typeof valor !== 'string') return '';
+    const limpio = valor.trim();
+    return /^https?:\/\//i.test(limpio) ? limpio : '';
+  }
+
   function gs(valor) {
     return `${moneda()} ${formateador.format(Number(valor) || 0)}`;
+  }
+
+  function moneda() {
+    if (estado.config && typeof estado.config.moneda === 'string' && estado.config.moneda.trim()) {
+      return estado.config.moneda.trim();
+    }
+    const negocio = estado.menu && estado.menu.negocio;
+    return (negocio && negocio.moneda) || 'Gs';
+  }
+
+  function prefiereMenosMovimiento() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function mostrarToast(texto) {
+    const toast = $('toast');
+    if (!toast) return;
+    toast.textContent = texto;
+    toast.hidden = false;
+    clearTimeout(estado.temporizadorToast);
+    estado.temporizadorToast = setTimeout(() => {
+      toast.hidden = true;
+    }, 3500);
   }
 
   // Respaldo del logo: si assets/ui/logo-kr.svg no se puede parsear (SVG mal formado),
@@ -72,25 +106,6 @@
     if (logo.complete && logo.naturalWidth === 0 && logo.src !== respaldo) {
       logo.src = respaldo;
     }
-  }
-
-  function moneda() {
-    if (estado.config && typeof estado.config.moneda === 'string' && estado.config.moneda.trim()) {
-      return estado.config.moneda.trim();
-    }
-    const negocio = estado.menu && estado.menu.negocio;
-    return (negocio && negocio.moneda) || 'Gs';
-  }
-
-  function mostrarToast(texto) {
-    const toast = $('toast');
-    if (!toast) return;
-    toast.textContent = texto;
-    toast.hidden = false;
-    clearTimeout(estado.temporizadorToast);
-    estado.temporizadorToast = setTimeout(() => {
-      toast.hidden = true;
-    }, 3500);
   }
 
   // ---------- Carga de datos ----------
@@ -116,10 +131,16 @@
     aplicarColores(estado.config);
     actualizarTextosNegocio();
     construirCategorias();
-    construirTabsYPaneles();
+    renderCombos();
+    renderCategorias();
+    renderUbicacion();
     cargarCarrito();
-    const primera = estado.categorias[0];
-    if (primera) activarCategoria(primera.id);
+    const inicial =
+      estado.categorias.find((categoria) => categoria.id === ID_CATEGORIA_INICIAL) || estado.categorias[0];
+    if (inicial) {
+      renderPanelCategoria(inicial.id);
+      marcarCategoriaActiva(inicial.id);
+    }
     actualizarCarritoUI();
     ocultarCarga();
   }
@@ -146,27 +167,50 @@
     const config = estado.config || {};
     const nombre = config.nombre || negocio.nombre || 'KR BURGER & PIZZA';
     const nombreCabecera = $('negocio-nombre');
-    const tagline = $('negocio-tagline');
-    const pieHorario = $('pie-horario');
-    const pieDireccion = $('pie-direccion');
+    const taglineCabecera = $('negocio-tagline');
+    const kicker = $('portada-kicker');
+    const taglinePortada = $('portada-tagline');
+    const horarioPortada = $('portada-horario');
     const splashTagline = document.querySelector('.splash-tagline');
     if (nombreCabecera) nombreCabecera.textContent = nombre;
-    if (tagline && negocio.tagline) tagline.textContent = negocio.tagline;
+    if (kicker) kicker.textContent = nombre;
+    if (taglineCabecera && negocio.tagline) taglineCabecera.textContent = negocio.tagline;
+    if (taglinePortada && negocio.tagline) taglinePortada.textContent = negocio.tagline;
     if (splashTagline && negocio.tagline) splashTagline.textContent = negocio.tagline;
-    if (pieHorario && negocio.horario) pieHorario.textContent = negocio.horario;
-    if (pieDireccion && negocio.direccion) pieDireccion.textContent = negocio.direccion;
+    if (horarioPortada && negocio.horario) horarioPortada.textContent = negocio.horario;
     document.title = `${nombre} · Pedidos por WhatsApp`;
   }
 
+  function renderUbicacion() {
+    const negocio = (estado.menu && estado.menu.negocio) || {};
+    const ubicacion = negocio.ubicacion || {};
+    const asignar = (id, texto) => {
+      const nodo = $(id);
+      if (nodo && texto) nodo.textContent = texto;
+    };
+    asignar('ubicacion-direccion', ubicacion.direccion || negocio.direccion);
+    asignar('ubicacion-referencia', ubicacion.referencia);
+    asignar('ubicacion-horario', negocio.horario);
+    asignar('ubicacion-delivery', ubicacion.delivery);
+    const enlace = $('link-mapa');
+    const url = urlSegura(ubicacion.mapa_url);
+    if (enlace) {
+      if (url) {
+        enlace.href = url;
+        enlace.hidden = false;
+      } else {
+        enlace.hidden = true;
+      }
+    }
+  }
+
   function mostrarError() {
-    const carga = $('cargando-catalogo');
+    for (const id of ['cargando-catalogo', 'pantalla-categorias', 'pantalla-catalogo']) {
+      const nodo = $(id);
+      if (nodo) nodo.hidden = true;
+    }
     const error = $('error-catalogo');
-    const tabs = $('tabs');
-    const secciones = $('secciones-catalogo');
-    if (carga) carga.hidden = true;
     if (error) error.hidden = false;
-    if (tabs) tabs.hidden = true;
-    if (secciones) secciones.hidden = true;
   }
 
   function ocultarCarga() {
@@ -174,26 +218,76 @@
     if (carga) carga.hidden = true;
   }
 
-  // ---------- Catálogo ----------
+  // ---------- Pantallas ----------
+  function mostrarPantalla(nombre) {
+    const categorias = $('pantalla-categorias');
+    const catalogo = $('pantalla-catalogo');
+    if (!categorias || !catalogo) return;
+    const verCategorias = nombre === 'categorias';
+    categorias.hidden = !verCategorias;
+    categorias.setAttribute('aria-hidden', String(!verCategorias));
+    catalogo.hidden = verCategorias;
+    catalogo.setAttribute('aria-hidden', String(verCategorias));
+    const visible = verCategorias ? categorias : catalogo;
+    visible.classList.remove('entrando');
+    void visible.offsetWidth; // reinicia la animación fade
+    visible.classList.add('entrando');
+    estado.pantalla = nombre;
+  }
+
+  function abrirCatalogo(idCategoria) {
+    const categoria = estado.categorias.find((item) => item.id === idCategoria);
+    if (!categoria) return;
+    renderPanelCategoria(categoria.id);
+    marcarCategoriaActiva(categoria.id);
+    mostrarPantalla('catalogo');
+    window.scrollTo({ top: 0, behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth' });
+    const volver = $('volver-categorias');
+    if (volver) volver.focus({ preventScroll: true });
+  }
+
+  function volverCategorias() {
+    mostrarPantalla('categorias');
+    const nav = $('nav-categorias');
+    if (nav) nav.scrollIntoView({ behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth', block: 'start' });
+    const tile = estado.categoriaActiva ? $('tab-' + estado.categoriaActiva) : null;
+    if (tile) tile.focus({ preventScroll: true });
+  }
+
+  // ---------- Datos del menú ----------
   function construirCategorias() {
     const menu = estado.menu || {};
     const categorias = [];
     for (const categoria of Array.isArray(menu.categorias) ? menu.categorias : []) {
       if (!categoria || typeof categoria.id !== 'string') continue;
+      const items = Array.isArray(categoria.items) ? categoria.items : [];
       categorias.push({
         id: categoria.id,
         nombre: categoria.nombre || categoria.id,
-        items: Array.isArray(categoria.items) ? categoria.items : []
-      });
-    }
-    if (Array.isArray(menu.combos) && menu.combos.length) {
-      categorias.push({
-        id: 'combos',
-        nombre: 'Combos',
-        items: menu.combos.map((combo) => Object.assign({}, combo, { tipo: 'combo', extras: [] }))
+        icono: typeof categoria.icono === 'string' ? categoria.icono : items[0] && items[0].imagen,
+        aviso: typeof categoria.aviso === 'string' ? categoria.aviso : '',
+        items
       });
     }
     estado.categorias = categorias;
+    estado.combos = [];
+    for (const combo of Array.isArray(menu.combos) ? menu.combos : []) {
+      if (!combo || typeof combo.id !== 'string') continue;
+      estado.combos.push(Object.assign({}, combo, { tipo: 'combo', extras: [] }));
+    }
+  }
+
+  function buscarProducto(idProducto) {
+    for (const categoria of estado.categorias) {
+      const encontrado = categoria.items.find((item) => item && item.id === idProducto);
+      if (encontrado) return encontrado;
+    }
+    return estado.combos.find((combo) => combo && combo.id === idProducto) || null;
+  }
+
+  function buscarExtra(idExtra) {
+    const extras = estado.menu && Array.isArray(estado.menu.extras) ? estado.menu.extras : [];
+    return extras.find((extra) => extra && extra.id === idExtra) || null;
   }
 
   function categoriaDeProducto(idProducto) {
@@ -203,80 +297,133 @@
     return null;
   }
 
-  function buscarProducto(idProducto) {
-    for (const categoria of estado.categorias) {
-      const encontrado = categoria.items.find((item) => item && item.id === idProducto);
-      if (encontrado) return encontrado;
+  function nombreCategoriaDe(idProducto) {
+    if (estado.combos.some((combo) => combo.id === idProducto)) return 'Combos';
+    const id = categoriaDeProducto(idProducto);
+    const categoria = estado.categorias.find((item) => item.id === id);
+    return categoria ? categoria.nombre : 'Menú';
+  }
+
+  function resumenIncluye(combo) {
+    const ids = Array.isArray(combo.incluye) ? combo.incluye : [];
+    return ids
+      .map((idProducto) => buscarProducto(idProducto))
+      .filter(Boolean)
+      .map((producto) => producto.nombre)
+      .join(' + ');
+  }
+
+  // ---------- Combos destacados ----------
+  function renderCombos() {
+    const carrusel = $('carrusel-combos');
+    if (!carrusel) return;
+    carrusel.replaceChildren();
+    for (const combo of estado.combos) carrusel.appendChild(crearComboCard(combo));
+  }
+
+  function crearComboCard(combo) {
+    const tarjeta = boton('combo-card', '');
+    tarjeta.disabled = Boolean(combo.agotado);
+    tarjeta.setAttribute('aria-label', `Ver ${combo.nombre}`);
+
+    const figura = el('div', 'combo-figura');
+    figura.appendChild(imagen('', combo.imagen, combo.nombre, true));
+    if (combo.agotado) figura.appendChild(el('span', 'tarjeta-sello', 'Agotado'));
+
+    const cuerpo = el('div', 'combo-cuerpo');
+    cuerpo.appendChild(el('h3', 'combo-nombre', combo.nombre));
+    const incluye = resumenIncluye(combo);
+    if (incluye) cuerpo.appendChild(el('p', 'combo-incluye', `Incluye: ${incluye}`));
+    if (combo.destacado) {
+      const badges = el('div', 'badges');
+      badges.appendChild(el('span', 'badge badge-destacado', 'Destacado'));
+      cuerpo.appendChild(badges);
     }
-    return null;
+    cuerpo.appendChild(el('p', 'combo-precio', gs(combo.precio)));
+
+    tarjeta.append(figura, cuerpo);
+    tarjeta.addEventListener('click', () => abrirProducto(combo));
+    return tarjeta;
   }
 
-  function buscarExtra(idExtra) {
-    const extras = (estado.menu && Array.isArray(estado.menu.extras)) ? estado.menu.extras : [];
-    return extras.find((extra) => extra && extra.id === idExtra) || null;
-  }
-
-  function construirTabsYPaneles() {
-    const tabs = $('tabs');
-    const secciones = $('secciones-catalogo');
-    if (!tabs || !secciones) return;
-    tabs.replaceChildren();
-    secciones.replaceChildren();
+  // ---------- Pantalla 1: categorías (tablist de tiles) ----------
+  function renderCategorias() {
+    const nav = $('nav-categorias');
+    const contenedorPaneles = $('paneles-productos');
+    if (!nav || !contenedorPaneles) return;
+    nav.replaceChildren();
+    contenedorPaneles.replaceChildren();
     for (const categoria of estado.categorias) {
-      const tab = el('button', 'tab', categoria.nombre);
-      tab.type = 'button';
-      tab.id = `tab-${categoria.id}`;
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', 'false');
-      tab.setAttribute('aria-controls', `panel-${categoria.id}`);
-      tab.tabIndex = -1;
-      tab.addEventListener('click', () => activarCategoria(categoria.id));
-      tab.addEventListener('keydown', (evento) => moverEntreTabs(evento, categoria.id));
-      tabs.appendChild(tab);
+      const tile = boton('categoria-tile', '');
+      tile.id = `tab-${categoria.id}`;
+      tile.setAttribute('role', 'tab');
+      tile.setAttribute('aria-selected', 'false');
+      tile.setAttribute('aria-controls', `panel-${categoria.id}`);
+      tile.tabIndex = -1;
+      const icono = imagen('categoria-icono', categoria.icono, '', true);
+      const info = el('span', 'categoria-info');
+      info.appendChild(el('span', 'categoria-nombre', categoria.nombre));
+      const cantidad = categoria.items.length;
+      info.appendChild(
+        el('span', 'categoria-cantidad', cantidad === 1 ? '1 producto' : `${cantidad} productos`)
+      );
+      tile.append(icono, info);
+      tile.addEventListener('click', () => abrirCatalogo(categoria.id));
+      tile.addEventListener('keydown', (evento) => moverFocoTabs(evento, categoria.id));
+      nav.appendChild(tile);
 
-      const panel = el('section', 'seccion-categoria');
+      const panel = el('div', 'panel-productos');
       panel.id = `panel-${categoria.id}`;
       panel.setAttribute('role', 'tabpanel');
       panel.setAttribute('aria-labelledby', `tab-${categoria.id}`);
       panel.hidden = true;
-      const titulo = el('h2', 'seccion-titulo', categoria.nombre);
-      const grilla = el('div', 'grilla');
-      panel.append(titulo, grilla);
-      secciones.appendChild(panel);
+      panel.appendChild(el('div', 'grilla'));
+      contenedorPaneles.appendChild(panel);
     }
   }
 
-  function moverEntreTabs(evento, idCategoria) {
-    const teclas = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
-    if (!teclas.includes(evento.key)) return;
-    evento.preventDefault();
-    const indice = estado.categorias.findIndex((categoria) => categoria.id === idCategoria);
-    if (indice < 0) return;
-    let destino = indice;
-    if (evento.key === 'ArrowRight') destino = (indice + 1) % estado.categorias.length;
-    if (evento.key === 'ArrowLeft') destino = (indice - 1 + estado.categorias.length) % estado.categorias.length;
-    if (evento.key === 'Home') destino = 0;
-    if (evento.key === 'End') destino = estado.categorias.length - 1;
-    const objetivo = estado.categorias[destino];
-    if (!objetivo) return;
-    activarCategoria(objetivo.id);
-    const tab = $('tab-' + objetivo.id);
-    if (tab) tab.focus();
+  function marcarCategoriaActiva(idCategoria) {
+    estado.categoriaActiva = idCategoria;
+    for (const categoria of estado.categorias) {
+      const tile = $('tab-' + categoria.id);
+      if (!tile) continue;
+      const activa = categoria.id === idCategoria;
+      tile.setAttribute('aria-selected', String(activa));
+      tile.tabIndex = activa ? 0 : -1;
+    }
   }
 
-  function activarCategoria(idCategoria) {
-    const categoria = estado.categorias.find((item) => item.id === idCategoria) || estado.categorias[0];
+  function moverFocoTabs(evento, idCategoria) {
+    const teclas = {
+      ArrowRight: 1,
+      ArrowLeft: -1,
+      ArrowDown: 2,
+      ArrowUp: -2,
+      Home: 'inicio',
+      End: 'fin'
+    };
+    if (!(evento.key in teclas)) return;
+    evento.preventDefault();
+    const total = estado.categorias.length;
+    const indice = estado.categorias.findIndex((categoria) => categoria.id === idCategoria);
+    if (indice < 0 || total === 0) return;
+    let destino = indice;
+    const paso = teclas[evento.key];
+    if (paso === 'inicio') destino = 0;
+    else if (paso === 'fin') destino = total - 1;
+    else destino = (indice + paso + total) % total;
+    const objetivo = estado.categorias[destino];
+    if (!objetivo) return;
+    const tile = $('tab-' + objetivo.id);
+    if (tile) tile.focus();
+  }
+
+  function renderPanelCategoria(idCategoria) {
+    const categoria = estado.categorias.find((item) => item.id === idCategoria);
     if (!categoria) return;
-    estado.categoriaActiva = categoria.id;
     for (const otra of estado.categorias) {
-      const tab = $('tab-' + otra.id);
       const panel = $('panel-' + otra.id);
-      const activa = otra.id === categoria.id;
-      if (tab) {
-        tab.setAttribute('aria-selected', String(activa));
-        tab.tabIndex = activa ? 0 : -1;
-      }
-      if (panel) panel.hidden = !activa;
+      if (panel) panel.hidden = otra.id !== categoria.id;
     }
     const panelActivo = $('panel-' + categoria.id);
     if (!panelActivo) return;
@@ -287,8 +434,18 @@
       if (!item || typeof item.id !== 'string') return;
       grilla.appendChild(crearTarjeta(item, indice));
     });
+    const titulo = $('titulo-productos');
+    if (titulo) titulo.textContent = categoria.nombre;
+    const aviso = $('aviso-alcohol');
+    if (aviso) {
+      const hayAlcohol = categoria.items.some((item) => item && item.alcohol);
+      const texto = categoria.aviso || (hayAlcohol ? 'Venta de alcohol solo a mayores de 18 años' : '');
+      aviso.textContent = texto;
+      aviso.hidden = !texto;
+    }
   }
 
+  // ---------- Tarjetas de producto ----------
   function crearTarjeta(item, indice) {
     const articulo = el('article', 'tarjeta');
     if (item.agotado) articulo.classList.add('agotada');
@@ -305,33 +462,34 @@
     foto.width = 512;
     foto.height = 512;
     figura.appendChild(foto);
+    if (item.alcohol) figura.appendChild(el('span', 'badge badge-18', '18+'));
     if (item.agotado) figura.appendChild(el('span', 'tarjeta-sello', 'Agotado'));
 
     const cuerpo = el('div', 'tarjeta-cuerpo');
     cuerpo.appendChild(el('h3', 'tarjeta-nombre', item.nombre));
     if (item.descripcion) cuerpo.appendChild(el('p', 'tarjeta-descripcion', item.descripcion));
 
-    const pie = el('div', 'tarjeta-pie');
-    pie.appendChild(el('p', 'precio', gs(item.precio)));
     const badges = el('div', 'badges');
     if (item.destacado) badges.appendChild(el('span', 'badge badge-destacado', 'Destacado'));
     if (item.agotado) badges.appendChild(el('span', 'badge badge-agotado', 'Agotado'));
-    if (badges.childElementCount) pie.appendChild(badges);
+    if (badges.childElementCount) cuerpo.appendChild(badges);
+
+    const pie = el('div', 'tarjeta-pie');
+    pie.appendChild(el('p', 'precio', gs(item.precio)));
     cuerpo.appendChild(pie);
 
     abrir.append(figura, cuerpo);
     abrir.addEventListener('click', () => abrirProducto(item));
-    articulo.appendChild(abrir);
+
+    const mas = boton('tarjeta-mas', '+', item.agotado ? `${item.nombre} (agotado)` : `Ver opciones de ${item.nombre}`);
+    mas.disabled = Boolean(item.agotado);
+    mas.addEventListener('click', () => abrirProducto(item));
+
+    articulo.append(abrir, mas);
     return articulo;
   }
 
-  // ---------- (c) Diálogo de producto ----------
-  function nombreCategoriaDe(idProducto) {
-    const id = categoriaDeProducto(idProducto);
-    const categoria = estado.categorias.find((item) => item.id === id);
-    return categoria ? categoria.nombre : 'Menú';
-  }
-
+  // ---------- Diálogo de producto ----------
   function abrirProducto(item) {
     if (!item || item.agotado) return;
     estado.producto = {
@@ -350,6 +508,11 @@
     if ($('dp-etiqueta')) $('dp-etiqueta').textContent = nombreCategoriaDe(item.id);
     if ($('dp-titulo')) $('dp-titulo').textContent = item.nombre;
     if ($('dp-descripcion')) $('dp-descripcion').textContent = item.descripcion || '';
+    const esAlcohol = Boolean(item.alcohol);
+    const badge18 = $('dp-badge-18');
+    if (badge18) badge18.hidden = !esAlcohol;
+    const avisoAlcohol = $('dp-alcohol');
+    if (avisoAlcohol) avisoAlcohol.hidden = !esAlcohol;
     construirOpcionesProducto(item);
     if ($('dp-cantidad')) $('dp-cantidad').textContent = '1';
     actualizarTotalProducto();
@@ -409,12 +572,9 @@
     }
 
     if (item.tipo === 'combo' && Array.isArray(item.incluye) && item.incluye.length) {
-      const nombres = item.incluye
-        .map((idProducto) => buscarProducto(idProducto))
-        .filter(Boolean)
-        .map((producto) => producto.nombre);
-      if (nombres.length) {
-        contenedor.appendChild(el('p', 'dp-incluye', `Incluye: ${nombres.join(' + ')}`));
+      const resumen = resumenIncluye(item);
+      if (resumen) {
+        contenedor.appendChild(el('p', 'dp-incluye', `Incluye: ${resumen}`));
         hayOpciones = true;
       }
     }
@@ -439,7 +599,9 @@
     radio.checked = marcado;
     radio.addEventListener('change', () => {
       if (!estado.producto) return;
-      estado.producto.borde = radio.checked;
+      // Se deriva del value del radio elegido: ambos radios tienen checked=true al
+      // seleccionarse, así que leer radio.checked rompía el precio al volver a "Sin borde".
+      estado.producto.borde = radio.value === 'con-borde';
       actualizarTotalProducto();
     });
     opcion.appendChild(radio);
@@ -599,15 +761,17 @@
     return precio;
   }
 
+  // Variante legible para el carrito y el mensaje de WhatsApp.
   function varianteLinea(linea) {
     const partes = [];
-    if (linea.borde) partes.push('con borde');
+    if (linea.borde) partes.push('Con borde de queso');
     const extras = Array.isArray(linea.extras) ? linea.extras : [];
-    for (const idExtra of extras) {
-      const extra = buscarExtra(idExtra);
-      if (extra) partes.push(extra.nombre);
-    }
-    return partes.join(', ');
+    const nombres = extras
+      .map((idExtra) => buscarExtra(idExtra))
+      .filter(Boolean)
+      .map((extra) => extra.nombre);
+    if (nombres.length) partes.push(`Con extras: ${nombres.join(', ')}`);
+    return partes.join(' · ');
   }
 
   function totalCarrito() {
@@ -693,7 +857,8 @@
     const categoriasEnCarrito = new Set(
       estado.lineas.map((linea) => categoriaDeProducto(linea.id)).filter(Boolean)
     );
-    const sugerencias = Array.isArray(estado.menu && estado.menu.sugerencias) ? estado.menu.sugerencias : [];
+    const sugerencias =
+      estado.menu && Array.isArray(estado.menu.sugerencias) ? estado.menu.sugerencias : [];
     let mostradas = 0;
     for (const sugerencia of sugerencias) {
       if (!sugerencia || !sugerencia.cuando || !sugerencia.si_falta) continue;
@@ -702,24 +867,27 @@
       const oferta = buscarProducto(sugerencia.oferta);
       if (!oferta || oferta.agotado) continue;
       const caja = el('div', 'sugerencia');
-      caja.appendChild(el('p', 'sugerencia-mensaje', sugerencia.mensaje || '¿Agregamos algo más?'));
+      caja.appendChild(imagen('sugerencia-img', oferta.imagen, oferta.nombre, true));
+      const texto = el('div', 'sugerencia-texto');
+      texto.appendChild(el('p', 'sugerencia-mensaje', sugerencia.mensaje || '¿Agregamos algo más?'));
       const agregar = boton(
         'boton-sugerencia',
-        `Agregar ${oferta.nombre} · ${gs(oferta.precio)}`,
+        `+ Agregar ${oferta.nombre} · ${gs(oferta.precio)}`,
         `Agregar ${oferta.nombre} al carrito`
       );
       agregar.addEventListener('click', () => {
         agregarLinea({ id: oferta.id, cantidad: 1, borde: false, extras: [] });
         mostrarToast(`${oferta.nombre} agregado al carrito.`);
       });
-      caja.appendChild(agregar);
+      texto.appendChild(agregar);
+      caja.appendChild(texto);
       contenedor.appendChild(caja);
       mostradas++;
     }
     contenedor.hidden = mostradas === 0;
   }
 
-  // ---------- Pedido por WhatsApp ----------
+  // ---------- Pedido por WhatsApp (mensaje estructurado) ----------
   function numeroWhatsApp() {
     const negocio = (estado.menu && estado.menu.negocio) || {};
     const config = estado.config || {};
@@ -732,18 +900,40 @@
     return marcado ? marcado.value : 'Delivery';
   }
 
+  function notaCliente() {
+    const campo = $('nota-pedido');
+    return campo && typeof campo.value === 'string' ? campo.value.trim() : '';
+  }
+
   function mensajePedido() {
     const negocio = (estado.menu && estado.menu.negocio) || {};
-    const lineas = [`¡Hola ${negocio.nombre || 'KR BURGER & PIZZA'}! Quiero hacer este pedido:`, ''];
+    const ubicacion = negocio.ubicacion || {};
+    const bloques = [];
+    let numero = 0;
     for (const linea of estado.lineas) {
       const item = buscarProducto(linea.id);
       if (!item) continue;
+      numero++;
       const variante = varianteLinea(linea);
       const detalle = variante ? ` (${variante})` : '';
-      lineas.push(`• ${linea.cantidad}x ${item.nombre}${detalle} — ${gs(precioLinea(linea) * linea.cantidad)}`);
+      const filas = [`*${numero}. ${item.nombre}*`, `- ${linea.cantidad}x ${item.nombre}${detalle}`];
+      if (item.tipo === 'combo') {
+        const incluye = resumenIncluye(item);
+        if (incluye) filas.push(`- Incluye: ${incluye}`);
+      }
+      bloques.push(filas.join('\n'));
     }
-    lineas.push('', `Total: ${gs(totalCarrito())}`, `Modalidad: ${modalidadElegida()}`);
-    if (negocio.mensaje_cierre) lineas.push('', negocio.mensaje_cierre);
+    const nota = notaCliente();
+    if (nota) bloques.push(`- Nota: ${nota}`);
+    const lineas = ['*NUEVO PEDIDO - KR BURGER*', '', bloques.join('\n\n'), '', `*Total:* ${gs(totalCarrito())}`, ''];
+    const modalidad = modalidadElegida();
+    lineas.push(`*Modalidad:* ${modalidad}`);
+    const direccion = ubicacion.direccion || negocio.direccion;
+    if (modalidad === 'Delivery') {
+      if (direccion) lineas.push(`📍 ${direccion}`);
+      if (ubicacion.referencia) lineas.push(`Referencia: ${ubicacion.referencia}`);
+    }
+    lineas.push('', '_Enviado desde el menú digital_');
     return lineas.join('\n');
   }
 
@@ -759,6 +949,7 @@
       mensaje,
       total: totalCarrito(),
       modalidad: modalidadElegida(),
+      nota: notaCliente(),
       unidades: unidadesCarrito(),
       lineas: estado.lineas.map((linea) => ({
         id: linea.id,
@@ -809,10 +1000,10 @@
       splash.classList.remove('saliendo');
       splash.setAttribute('aria-hidden', 'true');
       splash.hidden = true;
-      if (catalogo) catalogo.focus();
+      // preventScroll: el foco no debe desplazar la portada bajo la cabecera fija.
+      if (catalogo) catalogo.focus({ preventScroll: true });
     };
-    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducido) {
+    if (prefiereMenosMovimiento()) {
       terminar();
       return;
     }
@@ -837,6 +1028,9 @@
 
     const entrar = $('btn-entrar');
     if (entrar) entrar.addEventListener('click', entrarAlMenu);
+
+    const volver = $('volver-categorias');
+    if (volver) volver.addEventListener('click', volverCategorias);
 
     const abrir = $('abrir-carrito');
     if (abrir) abrir.addEventListener('click', abrirCarrito);
