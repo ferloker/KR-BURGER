@@ -307,10 +307,11 @@ ul {
 }
 
 .splash-logo {
-  /* Logo real completo: ancho fluido, alto automático y contain para no recortar nada. */
-  width: clamp(13rem, 56vw, 21rem);
-  max-width: 88vw;
+  /* Póster/marca completa: se ve todo el arte (logo, hamburguesa, pizza, papas y tagline). */
+  width: min(86vw, 24rem);
+  max-width: 100%;
   height: auto;
+  aspect-ratio: 1 / 1;
   object-fit: contain;
   border: 1px solid var(--borde);
   border-radius: var(--radio-panel);
@@ -388,11 +389,10 @@ ul {
 }
 
 .marca-logo {
-  /* El logo es apaisado: alto fijo y ancho automático (antes se deformaba a 40x40). */
+  /* Marca compacta para la cabecera: casilla "KR" cuadrada, legible a 40 px. */
   flex: 0 0 auto;
-  width: auto;
+  width: 2.4rem;
   height: 2.4rem;
-  max-width: 6rem;
   object-fit: contain;
   border: 1px solid var(--borde);
   border-radius: var(--radio-chico);
@@ -1984,7 +1984,7 @@ ul {
 
 @media (max-width: 22rem) {
   .splash-logo {
-    width: 68vw;
+    width: 82vw;
   }
 
   .boton-splash {
