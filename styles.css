@@ -818,7 +818,9 @@ ul {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Las fotos reales llenan todo el panel (sin marco vacío alrededor). */
+  object-fit: cover;
+  object-position: center;
 }
 
 .tarjeta.agotada .tarjeta-figura img {
