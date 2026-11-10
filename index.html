@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KR BURGER &amp; PIZZA · Pedidos por WhatsApp</title>
+  <meta name="description" content="Hamburguesas y pizzas hechas al momento. Armá tu pedido de KR BURGER &amp; PIZZA y enviálo por WhatsApp. Asunción, Paraguay.">
+  <meta name="theme-color" content="#ff8a3d">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="KR BURGER &amp; PIZZA">
+  <meta property="og:description" content="Hamburguesas y pizzas hechas al momento. Pedí por WhatsApp.">
+  <meta property="og:image" content="/assets/ui/og-image.png">
+  <meta property="og:locale" content="es_PY">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/ui/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/ui/icono-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="sin-scroll">
+  <!-- Cliente: KR BURGER | Creado por FERLOKER INDUSTRY | Fecha: 2026-11-10 -->
+  <a class="saltar" href="#catalogo">Saltar al menú</a>
+
+  <!-- (a) Splash: negro absoluto + capa de tabla periódica animada detrás del contenido -->
+  <div class="splash" id="splash">
+    <div class="splash-tabla" aria-hidden="true">
+      <svg class="tabla-svg" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" focusable="false" role="presentation">
+        <defs>
+          <pattern id="patron-tabla" width="150" height="104" patternUnits="userSpaceOnUse">
+            <g>
+              <rect x="8" y="8" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="14" y="16" font-size="5.5" fill="currentColor">1</text>
+              <text x="28" y="30" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">H</text>
+              <rect x="54" y="8" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="60" y="16" font-size="5.5" fill="currentColor">6</text>
+              <text x="74" y="30" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">C</text>
+              <rect x="100" y="8" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="106" y="16" font-size="5.5" fill="currentColor">8</text>
+              <text x="120" y="30" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">O</text>
+              <rect x="8" y="42" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="14" y="50" font-size="5.5" fill="currentColor">11</text>
+              <text x="28" y="64" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">Na</text>
+              <rect x="54" y="42" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="60" y="50" font-size="5.5" fill="currentColor">15</text>
+              <text x="74" y="64" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">P</text>
+              <rect x="100" y="42" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="106" y="50" font-size="5.5" fill="currentColor">26</text>
+              <text x="120" y="64" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">Fe</text>
+              <rect x="8" y="76" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="14" y="84" font-size="5.5" fill="currentColor">35</text>
+              <text x="28" y="98" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">Br</text>
+              <rect x="54" y="76" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="60" y="84" font-size="5.5" fill="currentColor">36</text>
+              <text x="74" y="98" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">Kr</text>
+              <rect x="100" y="76" width="40" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+              <text x="106" y="84" font-size="5.5" fill="currentColor">56</text>
+              <text x="120" y="98" font-size="12" font-weight="700" text-anchor="middle" fill="currentColor">Ba</text>
+            </g>
+          </pattern>
+        </defs>
+        <rect width="1400" height="900" fill="url(#patron-tabla)"></rect>
+      </svg>
+    </div>
+    <div class="splash-contenido">
+      <img class="splash-logo" src="assets/ui/logo-kr.svg" alt="KR BURGER &amp; PIZZA" width="240" height="240">
+      <p class="splash-tagline">Hamburguesas y pizzas hechas al momento</p>
+      <button class="boton-splash" id="btn-entrar" type="button" autofocus>TOCÁ PARA VER EL MENÚ</button>
+      <p class="splash-nota">Pedidos por WhatsApp</p>
+    </div>
+  </div>
+
+  <div class="cabecera-fija">
+    <header class="cabecera">
+      <a class="marca" href="#catalogo">
+        <img class="marca-logo" src="assets/ui/logo-kr.svg" alt="" width="240" height="240">
+        <span class="marca-textos">
+          <h1 class="marca-nombre" id="negocio-nombre">KR BURGER &amp; PIZZA</h1>
+          <span class="marca-tagline" id="negocio-tagline">Hamburguesas y pizzas hechas al momento</span>
+        </span>
+      </a>
+      <button class="boton-carrito" id="abrir-carrito" type="button" aria-label="Abrir carrito (0 productos)" aria-controls="dialogo-carrito">
+        <svg class="icono-carrito" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path d="M3.5 4.5h2l2.2 9.6a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5l1.5-5.7H7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          <circle cx="10" cy="19.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="17" cy="19.5" r="1.5" fill="currentColor"></circle>
+        </svg>
+        <span class="badge-carrito" id="contador-carrito">0</span>
+      </button>
+    </header>
+    <nav class="barra-tabs" id="tabs" role="tablist" aria-label="Categorías del menú"></nav>
+  </div>
+
+  <main class="catalogo" id="catalogo" tabindex="-1">
+    <p class="aviso aviso-carga" id="cargando-catalogo" role="status">Cargando el menú…</p>
+    <div class="aviso aviso-error" id="error-catalogo" role="alert" hidden>
+      <p>Estamos actualizando el menú. Volvé en un momento.</p>
+      <button class="boton-secundario" id="reintentar" type="button">Reintentar</button>
+    </div>
+    <div id="secciones-catalogo"></div>
+  </main>
+
+  <footer class="pie">
+    <p id="pie-horario">Martes a domingo · 19:00 a 01:00</p>
+    <p id="pie-direccion">Asunción, Paraguay</p>
+    <p class="pie-nota">Pedidos por WhatsApp · KR BURGER &amp; PIZZA</p>
+  </footer>
+
+  <!-- (c) Ficha de producto: opciones, cantidad y total en vivo -->
+  <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">
+    <div class="dp-caja">
+      <div class="dp-figura">
+        <img id="dp-imagen" alt="" width="512" height="512" decoding="async">
+        <button class="boton-cerrar boton-cerrar-flotante" id="dp-cerrar" type="button" aria-label="Cerrar ficha del producto">×</button>
+      </div>
+      <div class="dp-cuerpo">
+        <p class="dp-etiqueta" id="dp-etiqueta"></p>
+        <h2 class="dp-titulo" id="dp-titulo">Producto</h2>
+        <p class="dp-descripcion" id="dp-descripcion"></p>
+        <p class="dp-precio" id="dp-precio"></p>
+        <div class="dp-opciones" id="dp-opciones"></div>
+        <div class="dp-pedido">
+          <div class="dp-cantidad">
+            <button class="control-cantidad" id="dp-menos" type="button" aria-label="Restar una unidad">−</button>
+            <span class="dp-cantidad-valor" id="dp-cantidad" aria-live="polite">1</span>
+            <button class="control-cantidad" id="dp-mas" type="button" aria-label="Sumar una unidad">+</button>
+          </div>
+          <button class="boton-primario" id="dp-agregar" type="button" aria-live="polite">Agregar al carrito</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- (d) Carrito: drawer derecho con líneas, sugerencias, total y pedido por WhatsApp -->
+  <dialog class="dialogo dialogo-carrito" id="dialogo-carrito" aria-labelledby="dc-titulo">
+    <div class="drawer">
+      <header class="drawer-cabecera">
+        <h2 class="drawer-titulo" id="dc-titulo">Tu pedido</h2>
+        <button class="boton-cerrar" id="dc-cerrar" type="button" aria-label="Cerrar carrito">×</button>
+      </header>
+      <div class="drawer-cuerpo">
+        <div class="carrito-vacio" id="carrito-vacio">
+          <p class="carrito-vacio-titulo">Tu carrito está vacío.</p>
+          <p class="carrito-vacio-texto">Tocá un producto del menú para agregarlo.</p>
+          <button class="boton-secundario" id="dc-seguir" type="button">Ver el menú</button>
+        </div>
+        <ul class="carrito-lineas" id="carrito-lineas" hidden></ul>
+        <div class="sugerencias" id="sugerencias"></div>
+      </div>
+      <footer class="drawer-pie">
+        <dl class="totales">
+          <div class="totales-fila">
+            <dt>Total</dt>
+            <dd id="carrito-total">Gs 0</dd>
+          </div>
+        </dl>
+        <fieldset class="modalidad">
+          <legend>Modalidad</legend>
+          <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Delivery" checked> Delivery</label>
+          <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Retiro en el local"> Retiro en el local</label>
+        </fieldset>
+        <p class="nota" id="nota-whatsapp">El pedido se abre en WhatsApp. El carrito queda guardado en este dispositivo.</p>
+        <button class="boton-primario boton-whatsapp" id="btn-whatsapp" type="button" disabled>Pedir por WhatsApp</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <noscript>
+    <p class="aviso">Activá JavaScript para ver el menú y pedir por WhatsApp.</p>
+  </noscript>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

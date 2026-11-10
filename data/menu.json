@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "actualizado": "2026-11-10",
+  "negocio": {
+    "nombre": "KR BURGER & PIZZA",
+    "whatsapp": "595993417072",
+    "moneda": "Gs",
+    "horario": "Martes a domingo · 19:00 a 01:00",
+    "direccion": "Asunción, Paraguay",
+    "tagline": "Hamburguesas y pizzas hechas al momento",
+    "mensaje_cierre": "¡Gracias por tu pedido!"
+  },
+  "borde_precio": 10000,
+  "extras": [
+    { "id": "queso-extra", "nombre": "Queso extra", "precio": 5000 },
+    { "id": "panceta", "nombre": "Panceta", "precio": 7000 },
+    { "id": "huevo", "nombre": "Huevo frito", "precio": 5000 },
+    { "id": "cebolla-caramelizada", "nombre": "Cebolla caramelizada", "precio": 5000 },
+    { "id": "jalapenos", "nombre": "Jalapeños", "precio": 4000 },
+    { "id": "salsa-especial", "nombre": "Salsa especial KR", "precio": 3000 }
+  ],
+  "categorias": [
+    {
+      "id": "hamburguesas",
+      "nombre": "Hamburguesas",
+      "items": [
+        {
+          "id": "maximum-burger",
+          "nombre": "MaximumBurger",
+          "descripcion": "Doble medallón de 120 g, cheddar, panceta ahumada y salsa de la casa.",
+          "precio": 55000,
+          "imagen": "/assets/hamburguesas/maximum-burger.png",
+          "tipo": "hamburguesa",
+          "extras": ["queso-extra", "panceta", "huevo", "salsa-especial"],
+          "destacado": true,
+          "agotado": false
+        },
+        {
+          "id": "heisenberg-doble",
+          "nombre": "Heisenberg Doble",
+          "descripcion": "Dos medallones, doble cheddar fundido, cebolla caramelizada y jalapeños.",
+          "precio": 62000,
+          "imagen": "/assets/hamburguesas/heisenberg-doble.png",
+          "tipo": "hamburguesa",
+          "extras": ["queso-extra", "panceta", "jalapenos", "cebolla-caramelizada"],
+          "destacado": true,
+          "agotado": false
+        },
+        {
+          "id": "blue-sky-bacon",
+          "nombre": "Blue Sky Bacon",
+          "descripcion": "Medallón de 150 g, panceta crocante, queso azul y rúcula.",
+          "precio": 58000,
+          "imagen": "/assets/hamburguesas/blue-sky-bacon.png",
+          "tipo": "hamburguesa",
+          "extras": ["queso-extra", "panceta", "huevo"],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "pollos-hermanos-crispy",
+          "nombre": "Pollo Crispy",
+          "descripcion": "Pollo crujiente, lechuga, tomate y mayonesa de la casa.",
+          "precio": 52000,
+          "imagen": "/assets/hamburguesas/pollos-hermanos-crispy.png",
+          "tipo": "hamburguesa",
+          "extras": ["queso-extra", "salsa-especial", "jalapenos"],
+          "destacado": false,
+          "agotado": false
+        }
+      ]
+    },
+    {
+      "id": "pizzas",
+      "nombre": "Pizzas",
+      "items": [
+        {
+          "id": "muzzarella",
+          "nombre": "Muzzarella",
+          "descripcion": "Salsa de tomate, muzzarella y orégano. La clásica de siempre.",
+          "precio": 45000,
+          "precio_con_borde": 55000,
+          "imagen": "/assets/pizzas/muzzarella.png",
+          "tipo": "pizza",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "napolitana",
+          "nombre": "Napolitana",
+          "descripcion": "Muzzarella, rodajas de tomate, ajo y albahaca.",
+          "precio": 50000,
+          "precio_con_borde": 60000,
+          "imagen": "/assets/pizzas/napolitana.png",
+          "tipo": "pizza",
+          "extras": [],
+          "destacado": true,
+          "agotado": false
+        },
+        {
+          "id": "fugazzeta",
+          "nombre": "Fugazzeta",
+          "descripcion": "Cebolla caramelizada, muzzarella y un toque de orégano.",
+          "precio": 52000,
+          "precio_con_borde": 62000,
+          "imagen": "/assets/pizzas/fugazzeta.png",
+          "tipo": "pizza",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "pepperoni",
+          "nombre": "Pepperoni",
+          "descripcion": "Muzzarella y pepperoni picante en cada porción.",
+          "precio": 55000,
+          "precio_con_borde": 65000,
+          "imagen": "/assets/pizzas/pepperoni.png",
+          "tipo": "pizza",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        }
+      ]
+    },
+    {
+      "id": "acompanantes",
+      "nombre": "Acompañantes",
+      "items": [
+        {
+          "id": "papas-fritas",
+          "nombre": "Papas fritas",
+          "descripcion": "Porción generosa, crocante y con sal justa.",
+          "precio": 15000,
+          "imagen": "/assets/acompanantes/papas-fritas.png",
+          "tipo": "acompanante",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "papas-cheddar",
+          "nombre": "Papas con cheddar",
+          "descripcion": "Papas fritas bañadas en cheddar y panceta.",
+          "precio": 22000,
+          "imagen": "/assets/acompanantes/papas-cheddar.png",
+          "tipo": "acompanante",
+          "extras": [],
+          "destacado": true,
+          "agotado": false
+        },
+        {
+          "id": "aros-cebolla",
+          "nombre": "Aros de cebolla",
+          "descripcion": "Ocho aros empanizados con salsa para dipear.",
+          "precio": 18000,
+          "imagen": "/assets/acompanantes/aros-cebolla.png",
+          "tipo": "acompanante",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "nuggets",
+          "nombre": "Nuggets de pollo",
+          "descripcion": "Seis nuggets crujientes con salsa de la casa.",
+          "precio": 20000,
+          "imagen": "/assets/acompanantes/nuggets.png",
+          "tipo": "acompanante",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        }
+      ]
+    },
+    {
+      "id": "bebidas",
+      "nombre": "Bebidas",
+      "items": [
+        {
+          "id": "coca-cola-1l",
+          "nombre": "Coca-Cola 1 L",
+          "descripcion": "Botella de 1 litro, bien fría.",
+          "precio": 12000,
+          "imagen": "/assets/bebidas/coca-cola-1l.png",
+          "tipo": "bebida",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "coca-cola-500ml",
+          "nombre": "Coca-Cola 500 ml",
+          "descripcion": "Botella de 500 ml, bien fría.",
+          "precio": 8000,
+          "imagen": "/assets/bebidas/coca-cola-500ml.png",
+          "tipo": "bebida",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        },
+        {
+          "id": "agua-500ml",
+          "nombre": "Agua mineral 500 ml",
+          "descripcion": "Agua sin gas, 500 ml.",
+          "precio": 5000,
+          "imagen": "/assets/bebidas/agua-500ml.png",
+          "tipo": "bebida",
+          "extras": [],
+          "destacado": false,
+          "agotado": false
+        }
+      ]
+    }
+  ],
+  "combos": [
+    {
+      "id": "combo-walter",
+      "nombre": "Combo Walter",
+      "descripcion": "MaximumBurger + papas fritas + Coca-Cola 500 ml.",
+      "precio": 75000,
+      "imagen": "/assets/combos/combo-walter.png",
+      "incluye": ["maximum-burger", "papas-fritas", "coca-cola-500ml"],
+      "destacado": true,
+      "agotado": false
+    },
+    {
+      "id": "combo-jesse",
+      "nombre": "Combo Jesse",
+      "descripcion": "Blue Sky Bacon + papas fritas + agua mineral.",
+      "precio": 70000,
+      "imagen": "/assets/combos/combo-jesse.png",
+      "incluye": ["blue-sky-bacon", "papas-fritas", "agua-500ml"],
+      "destacado": false,
+      "agotado": false
+    },
+    {
+      "id": "combo-pizza",
+      "nombre": "Combo Pizza",
+      "descripcion": "Pizza muzzarella + Coca-Cola 500 ml.",
+      "precio": 52000,
+      "imagen": "/assets/combos/combo-pizza.png",
+      "incluye": ["muzzarella", "coca-cola-500ml"],
+      "destacado": false,
+      "agotado": false
+    }
+  ],
+  "sugerencias": [
+    {
+      "id": "sug-papas",
+      "cuando": { "categoria": "hamburguesas" },
+      "si_falta": { "categoria": "acompanantes" },
+      "oferta": "papas-cheddar",
+      "mensaje": "¿Agregamos papas con cheddar?"
+    },
+    {
+      "id": "sug-coca",
+      "cuando": { "categoria": "pizzas" },
+      "si_falta": { "categoria": "bebidas" },
+      "oferta": "coca-cola-1l",
+      "mensaje": "¿Una Coca de 1 L?"
+    }
+  ]
+}
