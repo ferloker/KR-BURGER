@@ -976,6 +976,18 @@
     }
   }
 
+  // Tras enviar el pedido por WhatsApp no debe quedar nada en el carrito:
+  // evita que al día siguiente se arrastre un pedido viejo sin darse cuenta.
+  function vaciarCarrito() {
+    estado.lineas = [];
+    try {
+      localStorage.removeItem(CLAVE_CARRITO);
+    } catch (error) {
+      // Modo privado o almacenamiento bloqueado: igual limpiamos la memoria.
+    }
+    actualizarCarritoUI();
+  }
+
   function listasIguales(a, b) {
     const uno = Array.isArray(a) ? a : [];
     const dos = Array.isArray(b) ? b : [];
@@ -1253,7 +1265,8 @@
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank', 'noopener');
     cerrarDialogo($('dialogo-carrito'));
-    mostrarToast('Te abrimos WhatsApp con el pedido. El carrito queda guardado.');
+    vaciarCarrito();
+    mostrarToast('Pedido enviado por WhatsApp. El carrito quedó vacío para tu próxima compra.');
   }
 
   // ---------- Diálogos ----------
