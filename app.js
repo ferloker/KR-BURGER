@@ -1190,30 +1190,40 @@
   function mensajePedido() {
     const negocio = (estado.menu && estado.menu.negocio) || {};
     const ubicacion = negocio.ubicacion || {};
-    const bloques = [];
+    // Una línea por producto (sin repetir "1x nombre"): la cabecera lleva el nombre y,
+    // si pidió más de uno, la cantidad; debajo solo van borde / sin / extras.
+    const lineas = ['*NUEVO PEDIDO - KR BURGER*', '_Pedido desde el menú digital_', ''];
     let numero = 0;
     for (const linea of estado.lineas) {
       const item = buscarProducto(linea.id);
       if (!item) continue;
       numero++;
-      const variante = varianteLinea(linea);
-      const detalle = variante ? ` (${variante})` : '';
-      const filas = [`*${numero}. ${item.nombre}*`, `- ${linea.cantidad}x ${item.nombre}${detalle}`];
+      const cantidad = linea.cantidad > 1 ? ` ×${linea.cantidad}` : '';
+      const filas = [`*${numero}. ${item.nombre}${cantidad}*`];
+      if (linea.borde) filas.push('   Con borde de queso');
+      const sin = Array.isArray(linea.sin) ? linea.sin : [];
+      if (sin.length) filas.push(`   Sin: ${sin.join(', ')}`);
+      const extras = Array.isArray(linea.extras) ? linea.extras : [];
+      const nombres = extras
+        .map((idExtra) => buscarExtra(idExtra))
+        .filter(Boolean)
+        .map((extra) => extra.nombre);
+      if (nombres.length) filas.push(`   Extras: ${nombres.join(', ')}`);
       if (item.tipo === 'combo') {
         const incluye = resumenIncluye(item);
-        if (incluye) filas.push(`- Incluye: ${incluye}`);
+        if (incluye) filas.push(`   Incluye: ${incluye}`);
       }
-      bloques.push(filas.join('\n'));
+      lineas.push(filas.join('\n'));
     }
-    const lineas = ['*NUEVO PEDIDO - KR BURGER*', '', bloques.join('\n\n'), '', `*Total:* ${gs(totalCarrito())}`, ''];
     const modalidad = modalidadElegida();
-    lineas.push(`*Modalidad:* ${modalidad}`);
+    lineas.push('', `*Total:* ${gs(totalCarrito())}`, `*Modalidad:* ${modalidad}`);
     const direccion = ubicacion.direccion || negocio.direccion;
-    if (modalidad === 'Delivery') {
-      if (direccion) lineas.push(`📍 ${direccion}`);
-      if (ubicacion.referencia) lineas.push(`Referencia: ${ubicacion.referencia}`);
+    // La dirección que se comparte es la del local: se rotula para no confundirla con
+    // una dirección de entrega, y el canal de origen queda identificado arriba.
+    if (direccion) lineas.push(`📍 Local: ${direccion}`);
+    if (modalidad === 'Delivery' && ubicacion.referencia) {
+      lineas.push(`Referencia del local: ${ubicacion.referencia}`);
     }
-    lineas.push('', '_Enviado desde el menú digital_');
     return lineas.join('\n');
   }
 
