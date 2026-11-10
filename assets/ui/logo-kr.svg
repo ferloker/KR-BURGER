@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="KR BURGER y PIZZA">
-  <rect width="240" height="240" rx="24" fill="#000000"/>
-  <circle cx="120" cy="96" r="62" fill="none" stroke="#ff8a3d" stroke-width="6"/>
-  <text x="120" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="58" font-weight="800" fill="#ff8a3d">KR</text>
-  <text x="120" y="186" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#f5efe8">BURGER &amp; PIZZA</text>
+  <rect width="240" height="240" rx="24" fill="#0a0a0a"/>
+  <circle cx="120" cy="96" r="62" fill="none" stroke="#f5c518" stroke-width="6"/>
+  <text x="120" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="58" font-weight="800" fill="#f5c518">KR</text>
+  <text x="120" y="186" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#f5f5f5">BURGER &amp; PIZZA</text>
 </svg>

@@ -1,12 +1,14 @@
 'use strict';
-/* KR BURGER & PIZZA — frontend público v2 (Directiva Parte 4), sin dependencias.
-   Dos pantallas: categorías (combos + tiles) y catálogo por categoría.
-   Paleta Breaking Bad desde config.json, render con createElement/textContent,
-   carrito en localStorage, diálogos <dialog> nativos y pedido estructurado por WhatsApp. */
+/* KR BURGER & PIZZA — frontend público v3, sin dependencias.
+   Dos pantallas (categorías / catálogo) con history.pushState + popstate y scroll
+   preservado; rueda de categorías sticky; combos con autoplay accesible; "quitar
+   ingredientes" por producto; carrito en localStorage y pedido estructurado por
+   WhatsApp. Render con createElement/textContent (sin HTML crudo con datos). */
 (() => {
   const CLAVE_CARRITO = 'kr-burger-carrito-v1';
   const MAX_CANTIDAD = 99;
   const ID_CATEGORIA_INICIAL = 'hamburguesas';
+  const INTERVALO_COMBOS = 4000;
   const MAPA_COLORES = {
     color_fondo: '--fondo',
     color_acento: '--acento',
@@ -24,6 +26,15 @@
     producto: null,
     categoriaActiva: null,
     pantalla: 'categorias',
+    scrollCategorias: 0,
+    scrollModal: null,
+    historialCatalogo: false,
+    comboTimer: null,
+    comboIndice: 0,
+    comboPausado: false,
+    ruedaCentrando: false,
+    ruedaCentradoTimer: null,
+    ruedaScrollTimer: null,
     temporizadorToast: null
   };
 
@@ -132,7 +143,9 @@
     actualizarTextosNegocio();
     construirCategorias();
     renderCombos();
+    iniciarCombos();
     renderCategorias();
+    renderRueda();
     renderUbicacion();
     cargarCarrito();
     const inicial =
@@ -140,6 +153,7 @@
     if (inicial) {
       renderPanelCategoria(inicial.id);
       marcarCategoriaActiva(inicial.id);
+      actualizarRueda(inicial.id);
     }
     actualizarCarritoUI();
     ocultarCarga();
@@ -189,9 +203,8 @@
       if (nodo && texto) nodo.textContent = texto;
     };
     asignar('ubicacion-direccion', ubicacion.direccion || negocio.direccion);
-    asignar('ubicacion-referencia', ubicacion.referencia);
-    asignar('ubicacion-horario', negocio.horario);
     asignar('ubicacion-delivery', ubicacion.delivery);
+    asignar('pie-horario', negocio.horario);
     const enlace = $('link-mapa');
     const url = urlSegura(ubicacion.mapa_url);
     if (enlace) {
@@ -218,7 +231,7 @@
     if (carga) carga.hidden = true;
   }
 
-  // ---------- Pantallas ----------
+  // ---------- Pantallas + historial ----------
   function mostrarPantalla(nombre) {
     const categorias = $('pantalla-categorias');
     const catalogo = $('pantalla-catalogo');
@@ -238,20 +251,61 @@
   function abrirCatalogo(idCategoria) {
     const categoria = estado.categorias.find((item) => item.id === idCategoria);
     if (!categoria) return;
+    const yaEnCatalogo = estado.pantalla === 'catalogo';
+    const scrollActual = window.scrollY;
+    if (!yaEnCatalogo) {
+      estado.scrollCategorias = scrollActual;
+      if (!estado.historialCatalogo) {
+        try {
+          history.pushState({ krVista: 'catalogo', categoria: categoria.id }, '');
+          estado.historialCatalogo = true;
+        } catch (error) {
+          // Sin History API seguimos funcionando, solo sin botón atrás propio.
+        }
+      }
+    }
     renderPanelCategoria(categoria.id);
     marcarCategoriaActiva(categoria.id);
-    mostrarPantalla('catalogo');
-    window.scrollTo({ top: 0, behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth' });
-    const volver = $('volver-categorias');
-    if (volver) volver.focus({ preventScroll: true });
+    actualizarRueda(categoria.id);
+    if (!yaEnCatalogo) {
+      mostrarPantalla('catalogo');
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      const volver = $('volver-categorias');
+      if (volver) volver.focus({ preventScroll: true });
+    } else {
+      // Cambio de categoría desde la rueda: el grid se actualiza sin saltar al top.
+      window.scrollTo({ top: scrollActual, behavior: 'auto' });
+    }
+    centrarRueda(categoria.id);
+  }
+
+  function salirCatalogo() {
+    estado.historialCatalogo = false;
+    mostrarPantalla('categorias');
+    window.scrollTo({ top: estado.scrollCategorias, behavior: 'auto' });
+    const tile = estado.categoriaActiva ? $('tab-' + estado.categoriaActiva) : null;
+    if (tile) tile.focus({ preventScroll: true });
   }
 
   function volverCategorias() {
-    mostrarPantalla('categorias');
-    const nav = $('nav-categorias');
-    if (nav) nav.scrollIntoView({ behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth', block: 'start' });
-    const tile = estado.categoriaActiva ? $('tab-' + estado.categoriaActiva) : null;
-    if (tile) tile.focus({ preventScroll: true });
+    if (estado.pantalla !== 'catalogo') return;
+    if (estado.historialCatalogo) {
+      try {
+        history.back();
+        return;
+      } catch (error) {
+        // fallback abajo
+      }
+    }
+    salirCatalogo();
+  }
+
+  function conectarHistorial() {
+    window.addEventListener('popstate', () => {
+      const dialogo = $('dialogo-producto');
+      if (dialogo && dialogo.open) cerrarDialogo(dialogo);
+      if (estado.pantalla === 'catalogo') salirCatalogo();
+    });
   }
 
   // ---------- Datos del menú ----------
@@ -305,15 +359,18 @@
   }
 
   function resumenIncluye(combo) {
+    return nombresIncluye(combo).join(' + ');
+  }
+
+  function nombresIncluye(combo) {
     const ids = Array.isArray(combo.incluye) ? combo.incluye : [];
     return ids
       .map((idProducto) => buscarProducto(idProducto))
       .filter(Boolean)
-      .map((producto) => producto.nombre)
-      .join(' + ');
+      .map((producto) => producto.nombre);
   }
 
-  // ---------- Combos destacados ----------
+  // ---------- Combos destacados con autoplay ----------
   function renderCombos() {
     const carrusel = $('carrusel-combos');
     if (!carrusel) return;
@@ -332,8 +389,7 @@
 
     const cuerpo = el('div', 'combo-cuerpo');
     cuerpo.appendChild(el('h3', 'combo-nombre', combo.nombre));
-    const incluye = resumenIncluye(combo);
-    if (incluye) cuerpo.appendChild(el('p', 'combo-incluye', `Incluye: ${incluye}`));
+    if (combo.descripcion) cuerpo.appendChild(el('p', 'combo-incluye', combo.descripcion));
     if (combo.destacado) {
       const badges = el('div', 'badges');
       badges.appendChild(el('span', 'badge badge-destacado', 'Destacado'));
@@ -344,6 +400,80 @@
     tarjeta.append(figura, cuerpo);
     tarjeta.addEventListener('click', () => abrirProducto(combo));
     return tarjeta;
+  }
+
+  function desplazarCombo(indice) {
+    const carrusel = $('carrusel-combos');
+    if (!carrusel) return;
+    const tarjeta = carrusel.children[indice];
+    if (!tarjeta) return;
+    const izquierda = tarjeta.offsetLeft - carrusel.offsetLeft;
+    carrusel.scrollTo({
+      left: Math.max(0, izquierda - 4),
+      behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth'
+    });
+  }
+
+  function avanzarCombo(paso) {
+    const total = estado.combos.length;
+    if (total < 2) return;
+    estado.comboIndice = (estado.comboIndice + paso + total) % total;
+    desplazarCombo(estado.comboIndice);
+  }
+
+  function reiniciarAutoplay() {
+    clearInterval(estado.comboTimer);
+    estado.comboTimer = null;
+    if (prefiereMenosMovimiento() || estado.combos.length < 2) return;
+    estado.comboTimer = setInterval(() => {
+      if (estado.comboPausado || document.hidden) return;
+      avanzarCombo(1);
+    }, INTERVALO_COMBOS);
+  }
+
+  function iniciarCombos() {
+    const carrusel = $('carrusel-combos');
+    if (!carrusel) return;
+    const prev = $('combos-prev');
+    const next = $('combos-next');
+    const pausar = () => {
+      estado.comboPausado = true;
+    };
+    const reanudar = () => {
+      estado.comboPausado = false;
+    };
+    if (next) {
+      next.addEventListener('click', () => {
+        avanzarCombo(1);
+        reiniciarAutoplay();
+      });
+    }
+    if (prev) {
+      prev.addEventListener('click', () => {
+        avanzarCombo(-1);
+        reiniciarAutoplay();
+      });
+    }
+    carrusel.addEventListener('mouseenter', pausar);
+    carrusel.addEventListener('mouseleave', reanudar);
+    carrusel.addEventListener('focusin', pausar);
+    carrusel.addEventListener('focusout', (evento) => {
+      if (!carrusel.contains(evento.relatedTarget)) reanudar();
+    });
+    carrusel.addEventListener('touchstart', pausar, { passive: true });
+    carrusel.addEventListener('touchend', reanudar, { passive: true });
+    carrusel.addEventListener('pointerdown', pausar);
+    carrusel.addEventListener('pointerup', reanudar);
+    const controles = prev ? prev.parentElement : null;
+    if (controles) {
+      controles.addEventListener('focusin', pausar);
+      controles.addEventListener('focusout', (evento) => {
+        if (!controles.contains(evento.relatedTarget)) reanudar();
+      });
+      controles.addEventListener('mouseenter', pausar);
+      controles.addEventListener('mouseleave', reanudar);
+    }
+    reiniciarAutoplay();
   }
 
   // ---------- Pantalla 1: categorías (tablist de tiles) ----------
@@ -416,6 +546,89 @@
     if (!objetivo) return;
     const tile = $('tab-' + objetivo.id);
     if (tile) tile.focus();
+  }
+
+  // ---------- Rueda de categorías (catálogo) ----------
+  function renderRueda() {
+    const pista = $('rueda-pista');
+    if (!pista) return;
+    pista.replaceChildren();
+    for (const categoria of estado.categorias) {
+      const item = boton('rueda-item', '');
+      item.dataset.id = categoria.id;
+      item.setAttribute('aria-current', 'false');
+      item.appendChild(imagen('rueda-icono', categoria.icono, '', true));
+      item.appendChild(el('span', 'rueda-nombre', categoria.nombre));
+      item.addEventListener('click', () => abrirCatalogo(categoria.id));
+      pista.appendChild(item);
+    }
+    conectarRueda(pista);
+  }
+
+  function actualizarRueda(idCategoria) {
+    const pista = $('rueda-pista');
+    if (!pista) return;
+    for (const item of pista.querySelectorAll('.rueda-item')) {
+      item.setAttribute('aria-current', String(item.dataset.id === idCategoria));
+    }
+  }
+
+  function centrarRueda(idCategoria) {
+    const pista = $('rueda-pista');
+    if (!pista) return;
+    const item = pista.querySelector(`.rueda-item[data-id="${idCategoria}"]`);
+    if (!item) return;
+    if (estado.pantalla !== 'catalogo') return;
+    estado.ruedaCentrando = true;
+    const izquierda = item.offsetLeft - pista.offsetLeft;
+    const destino = Math.max(0, izquierda - (pista.clientWidth - item.offsetWidth) / 2);
+    const maximo = Math.max(0, pista.scrollWidth - pista.clientWidth);
+    pista.scrollTo({
+      left: Math.min(destino, maximo),
+      behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth'
+    });
+    clearTimeout(estado.ruedaCentradoTimer);
+    estado.ruedaCentradoTimer = setTimeout(() => {
+      estado.ruedaCentrando = false;
+    }, 500);
+  }
+
+  function conectarRueda(pista) {
+    pista.addEventListener('scroll', () => {
+      clearTimeout(estado.ruedaScrollTimer);
+      estado.ruedaScrollTimer = setTimeout(() => {
+        if (estado.ruedaCentrando || estado.pantalla !== 'catalogo') return;
+        const centro = pista.scrollLeft + pista.clientWidth / 2;
+        let mejorId = null;
+        let mejorDistancia = Infinity;
+        for (const item of pista.querySelectorAll('.rueda-item')) {
+          const itemCentro = item.offsetLeft - pista.offsetLeft + item.offsetWidth / 2;
+          const distancia = Math.abs(itemCentro - centro);
+          if (distancia < mejorDistancia) {
+            mejorDistancia = distancia;
+            mejorId = item.dataset.id;
+          }
+        }
+        if (mejorId && mejorId !== estado.categoriaActiva) abrirCatalogo(mejorId);
+      }, 160);
+    });
+    pista.addEventListener('keydown', (evento) => {
+      if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(evento.key)) return;
+      evento.preventDefault();
+      const total = estado.categorias.length;
+      if (total === 0) return;
+      const indice = estado.categorias.findIndex((categoria) => categoria.id === estado.categoriaActiva);
+      let destino = indice < 0 ? 0 : indice;
+      if (evento.key === 'ArrowRight') destino = (destino + 1) % total;
+      if (evento.key === 'ArrowLeft') destino = (destino - 1 + total) % total;
+      if (evento.key === 'Home') destino = 0;
+      if (evento.key === 'End') destino = total - 1;
+      const objetivo = estado.categorias[destino];
+      if (!objetivo) return;
+      abrirCatalogo(objetivo.id);
+      const item = pista.querySelector(`.rueda-item[data-id="${objetivo.id}"]`);
+      if (item) item.focus({ preventScroll: true });
+    });
   }
 
   function renderPanelCategoria(idCategoria) {
@@ -496,8 +709,10 @@
       item,
       cantidad: 1,
       borde: false,
-      extras: new Set()
+      extras: new Set(),
+      sin: new Set()
     };
+    estado.scrollModal = window.scrollY;
     const dialogo = $('dialogo-producto');
     const foto = $('dp-imagen');
     if (foto) {
@@ -507,7 +722,13 @@
     }
     if ($('dp-etiqueta')) $('dp-etiqueta').textContent = nombreCategoriaDe(item.id);
     if ($('dp-titulo')) $('dp-titulo').textContent = item.nombre;
-    if ($('dp-descripcion')) $('dp-descripcion').textContent = item.descripcion || '';
+    const esCombo = item.tipo === 'combo';
+    const descripcion = $('dp-descripcion');
+    if (descripcion) {
+      // En combos la lista "Incluye" ya resume el contenido: no duplicamos la descripción.
+      descripcion.textContent = esCombo ? '' : item.descripcion || '';
+      descripcion.hidden = esCombo || !item.descripcion;
+    }
     const esAlcohol = Boolean(item.alcohol);
     const badge18 = $('dp-badge-18');
     if (badge18) badge18.hidden = !esAlcohol;
@@ -543,13 +764,35 @@
       hayOpciones = true;
     }
 
+    const ingredientes = Array.isArray(item.ingredientes) ? item.ingredientes : [];
+    if (ingredientes.length) {
+      const grupo = fieldset('Quitar ingredientes');
+      const chips = el('div', 'sin-chips');
+      for (const nombreIngrediente of ingredientes) {
+        const chip = boton('sin-chip', nombreIngrediente, `Quitar ${nombreIngrediente}`);
+        chip.setAttribute('aria-pressed', 'false');
+        chip.addEventListener('click', () => {
+          if (!estado.producto) return;
+          const activo = chip.getAttribute('aria-pressed') === 'true';
+          chip.setAttribute('aria-pressed', String(!activo));
+          if (activo) estado.producto.sin.delete(nombreIngrediente);
+          else estado.producto.sin.add(nombreIngrediente);
+        });
+        chips.appendChild(chip);
+      }
+      grupo.appendChild(chips);
+      contenedor.appendChild(grupo);
+      hayOpciones = true;
+    }
+
     const extras = Array.isArray(item.extras) ? item.extras : [];
     if (extras.length) {
       const grupo = fieldset('Extras');
+      grupo.classList.add('grupo-extras');
       for (const idExtra of extras) {
         const extra = buscarExtra(idExtra);
         if (!extra) continue;
-        const opcion = el('label', 'opcion');
+        const opcion = el('label', 'opcion opcion-tile');
         const casilla = document.createElement('input');
         casilla.type = 'checkbox';
         casilla.value = extra.id;
@@ -561,7 +804,7 @@
           actualizarTotalProducto();
         });
         opcion.appendChild(casilla);
-        opcion.appendChild(el('span', '', extra.nombre));
+        opcion.appendChild(el('span', 'opcion-tile-nombre', extra.nombre));
         opcion.appendChild(el('span', 'opcion-precio', '+' + gs(extra.precio)));
         grupo.appendChild(opcion);
       }
@@ -571,10 +814,15 @@
       }
     }
 
-    if (item.tipo === 'combo' && Array.isArray(item.incluye) && item.incluye.length) {
-      const resumen = resumenIncluye(item);
-      if (resumen) {
-        contenedor.appendChild(el('p', 'dp-incluye', `Incluye: ${resumen}`));
+    if (item.tipo === 'combo') {
+      const nombres = nombresIncluye(item);
+      if (nombres.length) {
+        const caja = el('div', 'dp-incluye');
+        caja.appendChild(el('p', 'dp-incluye-titulo', 'Incluye'));
+        const lista = el('ul', 'dp-incluye-lista');
+        for (const nombre of nombres) lista.appendChild(el('li', '', nombre));
+        caja.appendChild(lista);
+        contenedor.appendChild(caja);
         hayOpciones = true;
       }
     }
@@ -648,11 +896,13 @@
   function agregarProductoAlCarrito() {
     const producto = estado.producto;
     if (!producto) return;
+    const ingredientes = Array.isArray(producto.item.ingredientes) ? producto.item.ingredientes : [];
     agregarLinea({
       id: producto.item.id,
       cantidad: producto.cantidad,
       borde: Boolean(producto.borde),
-      extras: Array.from(producto.extras).sort()
+      extras: Array.from(producto.extras).sort(),
+      sin: ingredientes.filter((nombre) => producto.sin.has(nombre))
     });
     cerrarDialogo($('dialogo-producto'));
     mostrarToast(`${producto.item.nombre} agregado al carrito.`);
@@ -667,17 +917,24 @@
       const guardado = JSON.parse(crudo);
       if (!Array.isArray(guardado)) return;
       for (const linea of guardado) {
-        if (!linea || typeof linea.id !== 'string' || !buscarProducto(linea.id)) continue;
+        if (!linea || typeof linea.id !== 'string') continue;
+        const item = buscarProducto(linea.id);
+        if (!item) continue;
         const cantidad = Math.trunc(Number(linea.cantidad));
         if (!Number.isFinite(cantidad) || cantidad <= 0) continue;
         const extras = Array.isArray(linea.extras)
           ? linea.extras.filter((idExtra) => typeof idExtra === 'string' && buscarExtra(idExtra))
           : [];
+        const ingredientes = Array.isArray(item.ingredientes) ? item.ingredientes : [];
+        const sin = Array.isArray(linea.sin)
+          ? ingredientes.filter((nombre) => linea.sin.includes(nombre))
+          : [];
         estado.lineas.push({
           id: linea.id,
           cantidad: Math.min(MAX_CANTIDAD, cantidad),
           borde: Boolean(linea.borde),
-          extras
+          extras,
+          sin
         });
       }
     } catch (error) {
@@ -693,7 +950,7 @@
     }
   }
 
-  function extrasIguales(a, b) {
+  function listasIguales(a, b) {
     const uno = Array.isArray(a) ? a : [];
     const dos = Array.isArray(b) ? b : [];
     if (uno.length !== dos.length) return false;
@@ -709,7 +966,8 @@
       (linea) =>
         linea.id === nueva.id &&
         Boolean(linea.borde) === Boolean(nueva.borde) &&
-        extrasIguales(linea.extras, nueva.extras)
+        listasIguales(linea.extras, nueva.extras) &&
+        listasIguales(linea.sin, nueva.sin)
     );
     if (existente) {
       existente.cantidad = Math.min(MAX_CANTIDAD, existente.cantidad + cantidad);
@@ -718,7 +976,8 @@
         id: nueva.id,
         cantidad,
         borde: Boolean(nueva.borde),
-        extras: Array.isArray(nueva.extras) ? nueva.extras.slice() : []
+        extras: Array.isArray(nueva.extras) ? nueva.extras.slice() : [],
+        sin: Array.isArray(nueva.sin) ? nueva.sin.slice() : []
       });
     }
     guardarCarrito();
@@ -765,6 +1024,8 @@
   function varianteLinea(linea) {
     const partes = [];
     if (linea.borde) partes.push('Con borde de queso');
+    const sin = Array.isArray(linea.sin) ? linea.sin : [];
+    if (sin.length) partes.push(`Sin: ${sin.join(', ')}`);
     const extras = Array.isArray(linea.extras) ? linea.extras : [];
     const nombres = extras
       .map((idExtra) => buscarExtra(idExtra))
@@ -876,7 +1137,7 @@
         `Agregar ${oferta.nombre} al carrito`
       );
       agregar.addEventListener('click', () => {
-        agregarLinea({ id: oferta.id, cantidad: 1, borde: false, extras: [] });
+        agregarLinea({ id: oferta.id, cantidad: 1, borde: false, extras: [], sin: [] });
         mostrarToast(`${oferta.nombre} agregado al carrito.`);
       });
       texto.appendChild(agregar);
@@ -900,11 +1161,6 @@
     return marcado ? marcado.value : 'Delivery';
   }
 
-  function notaCliente() {
-    const campo = $('nota-pedido');
-    return campo && typeof campo.value === 'string' ? campo.value.trim() : '';
-  }
-
   function mensajePedido() {
     const negocio = (estado.menu && estado.menu.negocio) || {};
     const ubicacion = negocio.ubicacion || {};
@@ -923,8 +1179,6 @@
       }
       bloques.push(filas.join('\n'));
     }
-    const nota = notaCliente();
-    if (nota) bloques.push(`- Nota: ${nota}`);
     const lineas = ['*NUEVO PEDIDO - KR BURGER*', '', bloques.join('\n\n'), '', `*Total:* ${gs(totalCarrito())}`, ''];
     const modalidad = modalidadElegida();
     lineas.push(`*Modalidad:* ${modalidad}`);
@@ -949,13 +1203,13 @@
       mensaje,
       total: totalCarrito(),
       modalidad: modalidadElegida(),
-      nota: notaCliente(),
       unidades: unidadesCarrito(),
       lineas: estado.lineas.map((linea) => ({
         id: linea.id,
         cantidad: linea.cantidad,
         borde: linea.borde,
         extras: linea.extras.slice(),
+        sin: linea.sin.slice(),
         subtotal: precioLinea(linea) * linea.cantidad
       }))
     };
@@ -1025,6 +1279,7 @@
   // ---------- Eventos base ----------
   function conectarEventosBase() {
     for (const logo of document.querySelectorAll('.splash-logo, .marca-logo')) repararLogo(logo);
+    conectarHistorial();
 
     const entrar = $('btn-entrar');
     if (entrar) entrar.addEventListener('click', entrarAlMenu);
@@ -1059,12 +1314,24 @@
     const reintentar = $('reintentar');
     if (reintentar) reintentar.addEventListener('click', () => window.location.reload());
 
-    // Cierre al tocar el fondo del diálogo; Escape lo maneja <dialog> de forma nativa.
-    for (const idDialogo of ['dialogo-producto', 'dialogo-carrito']) {
-      const dialogo = $(idDialogo);
-      if (!dialogo) continue;
-      dialogo.addEventListener('click', (evento) => {
-        if (evento.target === dialogo) cerrarDialogo(dialogo);
+    // Al cerrar la ficha se restaura el scroll sin re-renderizar la grilla.
+    const dialogoProducto = $('dialogo-producto');
+    if (dialogoProducto) {
+      dialogoProducto.addEventListener('close', () => {
+        if (estado.scrollModal === null) return;
+        const y = estado.scrollModal;
+        estado.scrollModal = null;
+        requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'auto' }));
+      });
+      // Cierre al tocar el fondo; Escape lo maneja <dialog> de forma nativa.
+      dialogoProducto.addEventListener('click', (evento) => {
+        if (evento.target === dialogoProducto) cerrarDialogo(dialogoProducto);
+      });
+    }
+    const dialogoCarrito = $('dialogo-carrito');
+    if (dialogoCarrito) {
+      dialogoCarrito.addEventListener('click', (evento) => {
+        if (evento.target === dialogoCarrito) cerrarDialogo(dialogoCarrito);
       });
     }
   }

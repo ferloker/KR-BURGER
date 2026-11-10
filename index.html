@@ -108,43 +108,28 @@
         <div class="seccion-cabecera">
           <h2 class="seccion-titulo" id="titulo-combos">Combos</h2>
           <p class="seccion-subtitulo">Para compartir o pedir completo</p>
+          <div class="combos-controles">
+            <button class="combo-control" id="combos-prev" type="button" aria-label="Combo anterior">‹</button>
+            <button class="combo-control" id="combos-next" type="button" aria-label="Combo siguiente">›</button>
+          </div>
         </div>
-        <div class="carrusel" id="carrusel-combos"></div>
+        <div class="carrusel" id="carrusel-combos" aria-roledescription="carrusel" aria-label="Combos destacados"></div>
       </section>
 
       <nav class="seccion" id="nav-categorias" role="tablist" aria-label="Categorías del menú"></nav>
 
-      <section class="seccion" id="ubicacion" aria-labelledby="titulo-ubicacion">
-        <div class="seccion-cabecera">
-          <h2 class="seccion-titulo" id="titulo-ubicacion">Ubicación</h2>
-          <p class="seccion-subtitulo">Te esperamos o te lo llevamos</p>
-        </div>
-        <div class="tarjeta-ios">
-          <dl class="datos-ubicacion">
-            <div class="dato">
-              <dt>Dirección</dt>
-              <dd id="ubicacion-direccion">Av. Mariscal López 1234, Asunción</dd>
-            </div>
-            <div class="dato">
-              <dt>Referencia</dt>
-              <dd id="ubicacion-referencia">A dos cuadras de la plaza central · zona céntrica</dd>
-            </div>
-            <div class="dato">
-              <dt>Horario</dt>
-              <dd id="ubicacion-horario">Martes a domingo · 19:00 a 01:00</dd>
-            </div>
-            <div class="dato">
-              <dt>Delivery</dt>
-              <dd id="ubicacion-delivery">Delivery en zona céntrica · 30 a 45 min</dd>
-            </div>
-          </dl>
-          <a class="boton-mapa" id="link-mapa" href="#" target="_blank" rel="noopener" aria-label="Abrir la ubicación en Google Maps">
-            <svg class="icono-mapa" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-              <path d="M12 21s-6.5-5.4-6.5-10.2a6.5 6.5 0 1 1 13 0C18.5 15.6 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-              <circle cx="12" cy="10.6" r="2.4" fill="currentColor"></circle>
-            </svg>
-            Abrir en Google Maps
-          </a>
+      <section class="seccion ubicacion" id="ubicacion" aria-labelledby="titulo-ubicacion">
+        <div class="ubicacion-card">
+          <svg class="ubicacion-pin" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+            <path d="M12 21s-6.5-5.4-6.5-10.2a6.5 6.5 0 1 1 13 0C18.5 15.6 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            <circle cx="12" cy="10.6" r="2.4" fill="currentColor"></circle>
+          </svg>
+          <div class="ubicacion-texto">
+            <h2 class="ubicacion-titulo" id="titulo-ubicacion">Ubicación</h2>
+            <p class="ubicacion-direccion" id="ubicacion-direccion">Av. Mariscal López 1234, Asunción</p>
+            <p class="ubicacion-delivery" id="ubicacion-delivery">Delivery en zona céntrica · 30 a 45 min</p>
+          </div>
+          <a class="boton-mapa" id="link-mapa" href="#" target="_blank" rel="noopener" aria-label="Abrir la ubicación en Google Maps">Abrir en Google Maps</a>
         </div>
       </section>
     </div>
@@ -154,6 +139,11 @@
       <div class="catalogo-nav">
         <button class="boton-volver" id="volver-categorias" type="button">‹ Categorías</button>
       </div>
+
+      <nav class="rueda" id="rueda-categorias" aria-label="Cambiar categoría">
+        <div class="rueda-pista" id="rueda-pista"></div>
+      </nav>
+
       <section class="seccion" id="seccion-productos" aria-labelledby="titulo-productos">
         <div class="seccion-cabecera">
           <h2 class="seccion-titulo" id="titulo-productos">Hamburguesas</h2>
@@ -165,11 +155,12 @@
   </main>
 
   <footer class="pie">
+    <p class="pie-horario" id="pie-horario">Martes a domingo · 19:00 a 01:00</p>
     <p class="pie-nota">Pedidos por WhatsApp · Asunción, Paraguay</p>
     <p class="pie-credito">KR BURGER &amp; PIZZA · Hecho por FERLOKER INDUSTRY</p>
   </footer>
 
-  <!-- Ficha de producto: opciones, cantidad y total en vivo -->
+  <!-- Ficha de producto: quitar ingredientes, extras, cantidad y total en vivo -->
   <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">
     <div class="dp-caja">
       <div class="dp-figura">
@@ -226,10 +217,6 @@
           <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Delivery" checked> Delivery</label>
           <label class="modalidad-opcion"><input type="radio" name="modalidad" value="Retiro en el local"> Retiro en el local</label>
         </fieldset>
-        <label class="campo-nota" for="nota-pedido">
-          <span class="campo-nota-titulo">Nota (opcional)</span>
-          <input class="campo-nota-input" id="nota-pedido" type="text" maxlength="140" autocomplete="off" placeholder="Ej.: sin cebolla">
-        </label>
         <p class="nota" id="nota-whatsapp">El pedido se abre en WhatsApp. El carrito queda guardado en este dispositivo.</p>
         <button class="boton-primario boton-whatsapp" id="btn-whatsapp" type="button" disabled>Pedir por WhatsApp</button>
       </footer>

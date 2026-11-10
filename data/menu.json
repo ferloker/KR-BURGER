@@ -38,6 +38,7 @@
           "precio": 55000,
           "imagen": "/assets/hamburguesas/maximum-burger.png",
           "tipo": "hamburguesa",
+          "ingredientes": ["Pan brioche", "Doble medallón 120 g", "Cheddar", "Panceta ahumada", "Salsa KR"],
           "extras": ["queso-extra", "panceta", "huevo", "salsa-especial"],
           "destacado": true,
           "agotado": false
@@ -49,6 +50,7 @@
           "precio": 62000,
           "imagen": "/assets/hamburguesas/heisenberg-doble.png",
           "tipo": "hamburguesa",
+          "ingredientes": ["Pan brioche", "Doble medallón", "Doble cheddar", "Cebolla caramelizada", "Jalapeños"],
           "extras": ["queso-extra", "panceta", "jalapenos", "cebolla-caramelizada"],
           "destacado": true,
           "agotado": false
@@ -60,6 +62,7 @@
           "precio": 58000,
           "imagen": "/assets/hamburguesas/blue-sky-bacon.png",
           "tipo": "hamburguesa",
+          "ingredientes": ["Pan brioche", "Medallón 150 g", "Panceta crocante", "Queso azul", "Rúcula"],
           "extras": ["queso-extra", "panceta", "huevo"],
           "destacado": false,
           "agotado": false
@@ -71,6 +74,7 @@
           "precio": 52000,
           "imagen": "/assets/hamburguesas/pollos-hermanos-crispy.png",
           "tipo": "hamburguesa",
+          "ingredientes": ["Pan brioche", "Pollo crujiente", "Lechuga", "Tomate", "Mayonesa de la casa"],
           "extras": ["queso-extra", "salsa-especial", "jalapenos"],
           "destacado": false,
           "agotado": false
