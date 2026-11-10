@@ -691,7 +691,10 @@
     const abrir = el('button', 'tarjeta-abrir');
     abrir.type = 'button';
     abrir.disabled = Boolean(item.agotado);
-    abrir.setAttribute('aria-label', item.agotado ? `${item.nombre} (agotado)` : `Ver ${item.nombre}`);
+    abrir.setAttribute(
+      'aria-label',
+      item.agotado ? `${item.nombre} (agotado)` : `Ver y personalizar ${item.nombre}`
+    );
 
     const figura = el('div', 'tarjeta-figura');
     figura.style.setProperty('--pos-imagen', posicionImagen(item));
@@ -718,9 +721,15 @@
     abrir.append(figura, cuerpo);
     abrir.addEventListener('click', () => abrirProducto(item));
 
-    const mas = boton('tarjeta-mas', '+', item.agotado ? `${item.nombre} (agotado)` : `Ver opciones de ${item.nombre}`);
+    // "+" = agregar directo con la configuración base. La ficha (tocar la imagen)
+    // queda para personalizar: borde, ingredientes, extras o cantidad.
+    const mas = boton(
+      'tarjeta-mas',
+      '+',
+      item.agotado ? `${item.nombre} (agotado)` : `Agregar ${item.nombre} al carrito`
+    );
     mas.disabled = Boolean(item.agotado);
-    mas.addEventListener('click', () => abrirProducto(item));
+    mas.addEventListener('click', () => agregarDirecto(item));
 
     articulo.append(abrir, mas);
     return articulo;
@@ -917,6 +926,14 @@
     if (!producto) return;
     producto.cantidad = Math.min(MAX_CANTIDAD, Math.max(1, producto.cantidad + delta));
     actualizarTotalProducto();
+  }
+
+  // El "+" de la tarjeta agrega directo con la configuración base (sin abrir la ficha).
+  // La ficha queda para personalizar (borde, ingredientes, extras, cantidad).
+  function agregarDirecto(item) {
+    if (!item || item.agotado) return;
+    agregarLinea({ id: item.id, cantidad: 1, borde: false, extras: [], sin: [] });
+    mostrarToast(`${item.nombre} agregado al carrito.`);
   }
 
   function agregarProductoAlCarrito() {

@@ -53,7 +53,10 @@
   /* Movimiento */
   --dur: 240ms;
   --dur-lenta: 800ms;
+  --dur-splash: 520ms;
   --curva: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --curva-suave: cubic-bezier(0.16, 1, 0.3, 1);
+  --curva-salida: cubic-bezier(0.4, 0, 0.2, 1);
   /* Medidas */
   --ancho-max: 72rem;
   --alto-cabecera: 3.75rem;
@@ -248,13 +251,16 @@ ul {
   padding: var(--esp-5) var(--esp-4) calc(var(--esp-5) + var(--safe-inferior));
   overflow: hidden;
   background: var(--fondo);
-  transition: transform var(--dur-lenta) ease-in-out;
-  will-change: transform;
+  /* Salida suave: funde y eleva apenas en vez de dispararse fuera de pantalla. */
+  transition: opacity var(--dur-splash) var(--curva-salida),
+    transform var(--dur-splash) var(--curva-salida);
+  will-change: transform, opacity;
 }
 
 .splash.saliendo {
-  transform: translateY(-100vh);
-  transform: translateY(-100dvh);
+  opacity: 0;
+  transform: translate3d(0, -4%, 0) scale(0.985);
+  pointer-events: none;
 }
 
 .splash-tabla {
@@ -763,17 +769,17 @@ ul {
 }
 
 .panel-productos {
-  animation: aparecer var(--dur) var(--curva);
+  animation: aparecer 320ms var(--curva-suave);
 }
 
 @keyframes aparecer {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -784,8 +790,8 @@ ul {
   border-radius: var(--radio-tarjeta);
   background: var(--superficie);
   box-shadow: var(--sombra-ios);
-  animation: aparecer var(--dur) var(--curva) both;
-  animation-delay: calc(var(--i, 0) * 38ms);
+  animation: aparecer 360ms var(--curva-suave) both;
+  animation-delay: calc(var(--i, 0) * 26ms);
 }
 
 .tarjeta-abrir {
