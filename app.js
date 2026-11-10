@@ -182,15 +182,9 @@
     const nombre = config.nombre || negocio.nombre || 'KR BURGER & PIZZA';
     const nombreCabecera = $('negocio-nombre');
     const taglineCabecera = $('negocio-tagline');
-    const kicker = $('portada-kicker');
-    const taglinePortada = $('portada-tagline');
     const horarioPortada = $('portada-horario');
-    const splashTagline = document.querySelector('.splash-tagline');
     if (nombreCabecera) nombreCabecera.textContent = nombre;
-    if (kicker) kicker.textContent = nombre;
     if (taglineCabecera && negocio.tagline) taglineCabecera.textContent = negocio.tagline;
-    if (taglinePortada && negocio.tagline) taglinePortada.textContent = negocio.tagline;
-    if (splashTagline && negocio.tagline) splashTagline.textContent = negocio.tagline;
     if (horarioPortada && negocio.horario) horarioPortada.textContent = negocio.horario;
     document.title = `${nombre} · Pedidos por WhatsApp`;
   }
@@ -351,13 +345,6 @@
     return null;
   }
 
-  function nombreCategoriaDe(idProducto) {
-    if (estado.combos.some((combo) => combo.id === idProducto)) return 'Combos';
-    const id = categoriaDeProducto(idProducto);
-    const categoria = estado.categorias.find((item) => item.id === id);
-    return categoria ? categoria.nombre : 'Menú';
-  }
-
   function resumenIncluye(combo) {
     return nombresIncluye(combo).join(' + ');
   }
@@ -402,14 +389,23 @@
     return tarjeta;
   }
 
+  function pasoCombos(carrusel) {
+    const primera = carrusel && carrusel.children[0];
+    if (!primera) return 0;
+    const estilo = getComputedStyle(carrusel);
+    const separacion = parseFloat(estilo.columnGap || estilo.gap) || 0;
+    return primera.getBoundingClientRect().width + separacion;
+  }
+
   function desplazarCombo(indice) {
     const carrusel = $('carrusel-combos');
     if (!carrusel) return;
-    const tarjeta = carrusel.children[indice];
-    if (!tarjeta) return;
-    const izquierda = tarjeta.offsetLeft - carrusel.offsetLeft;
+    const paso = pasoCombos(carrusel);
+    if (!paso) return;
+    const maximo = Math.max(0, carrusel.scrollWidth - carrusel.clientWidth);
+    const destino = Math.min(Math.max(0, indice * paso), maximo);
     carrusel.scrollTo({
-      left: Math.max(0, izquierda - 4),
+      left: destino,
       behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth'
     });
   }
@@ -473,6 +469,16 @@
       controles.addEventListener('mouseenter', pausar);
       controles.addEventListener('mouseleave', reanudar);
     }
+    // Sincroniza el índice cuando el usuario desliza a mano (una tarjeta por paso).
+    let temporizadorDesliz = null;
+    carrusel.addEventListener('scroll', () => {
+      clearTimeout(temporizadorDesliz);
+      temporizadorDesliz = setTimeout(() => {
+        const paso = pasoCombos(carrusel);
+        if (!paso || !estado.combos.length) return;
+        estado.comboIndice = Math.round(carrusel.scrollLeft / paso) % estado.combos.length;
+      }, 140);
+    });
     reiniciarAutoplay();
   }
 
@@ -720,7 +726,6 @@
       if (resuelta) foto.src = resuelta;
       foto.alt = item.nombre;
     }
-    if ($('dp-etiqueta')) $('dp-etiqueta').textContent = nombreCategoriaDe(item.id);
     if ($('dp-titulo')) $('dp-titulo').textContent = item.nombre;
     const esCombo = item.tipo === 'combo';
     const descripcion = $('dp-descripcion');
@@ -735,6 +740,8 @@
     const avisoAlcohol = $('dp-alcohol');
     if (avisoAlcohol) avisoAlcohol.hidden = !esAlcohol;
     construirOpcionesProducto(item);
+    const cuerpoModal = $('dp-cuerpo');
+    if (cuerpoModal) cuerpoModal.scrollTop = 0;
     if ($('dp-cantidad')) $('dp-cantidad').textContent = '1';
     actualizarTotalProducto();
     abrirDialogo(dialogo);

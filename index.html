@@ -63,7 +63,6 @@
     </div>
     <div class="splash-contenido">
       <img class="splash-logo" src="assets/ui/poster.jpg" alt="KR BURGER &amp; PIZZA — hamburguesas, pizzas y papitas. Buen Sabor, Siempre." width="900" height="900">
-      <p class="splash-tagline">Buen Sabor, Siempre</p>
       <button class="boton-splash" id="btn-entrar" type="button" autofocus>TOCÁ PARA VER EL MENÚ</button>
       <p class="splash-nota">Pedidos por WhatsApp</p>
     </div>
@@ -95,9 +94,7 @@
     <!-- Pantalla 1: ¿qué se te antoja hoy? Combos + categorías -->
     <div class="pantalla" id="pantalla-categorias" aria-hidden="false">
       <header class="portada">
-        <p class="portada-kicker" id="portada-kicker">KR BURGER &amp; PIZZA</p>
         <h1 class="portada-titulo" id="titulo-portada" tabindex="-1">¿Qué se te antoja hoy?</h1>
-        <p class="portada-tagline" id="portada-tagline">Hamburguesas y pizzas hechas al momento</p>
         <p class="portada-horario" id="portada-horario">Martes a domingo · 19:00 a 01:00</p>
       </header>
 
@@ -157,31 +154,30 @@
     <p class="pie-credito">KR BURGER &amp; PIZZA · Hecho por FERLOKER INDUSTRY</p>
   </footer>
 
-  <!-- Ficha de producto: quitar ingredientes, extras, cantidad y total en vivo -->
+  <!-- Ficha de producto: imagen con nombre superpuesto, cuerpo scrolleable y pie fijo -->
   <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">
     <div class="dp-caja">
-      <div class="dp-figura">
-        <img id="dp-imagen" alt="" width="512" height="512" decoding="async">
+      <div class="dp-hero">
+        <img class="dp-hero-img" id="dp-imagen" alt="" width="512" height="512" decoding="async">
         <button class="boton-cerrar boton-cerrar-flotante" id="dp-cerrar" type="button" aria-label="Cerrar ficha del producto">×</button>
-      </div>
-      <div class="dp-cuerpo">
-        <p class="dp-etiqueta" id="dp-etiqueta"></p>
-        <div class="dp-titulo-fila">
+        <div class="dp-hero-titulo">
           <h2 class="dp-titulo" id="dp-titulo">Producto</h2>
           <span class="badge badge-18" id="dp-badge-18" hidden>18+</span>
         </div>
+      </div>
+      <div class="dp-cuerpo" id="dp-cuerpo">
         <p class="dp-descripcion" id="dp-descripcion"></p>
         <p class="dp-alcohol" id="dp-alcohol" hidden>Venta de alcohol solo a mayores de 18 años.</p>
         <p class="dp-precio" id="dp-precio"></p>
         <div class="dp-opciones" id="dp-opciones"></div>
-        <div class="dp-pedido">
-          <div class="dp-cantidad">
-            <button class="control-cantidad" id="dp-menos" type="button" aria-label="Restar una unidad">−</button>
-            <span class="dp-cantidad-valor" id="dp-cantidad" aria-live="polite">1</span>
-            <button class="control-cantidad" id="dp-mas" type="button" aria-label="Sumar una unidad">+</button>
-          </div>
-          <button class="boton-primario" id="dp-agregar" type="button" aria-live="polite">Agregar al carrito</button>
+      </div>
+      <div class="dp-pedido" id="dp-pedido">
+        <div class="dp-cantidad">
+          <button class="control-cantidad" id="dp-menos" type="button" aria-label="Restar una unidad">−</button>
+          <span class="dp-cantidad-valor" id="dp-cantidad" aria-live="polite">1</span>
+          <button class="control-cantidad" id="dp-mas" type="button" aria-label="Sumar una unidad">+</button>
         </div>
+        <button class="boton-primario" id="dp-agregar" type="button" aria-live="polite">Agregar al carrito</button>
       </div>
     </div>
   </dialog>

@@ -1,9 +1,9 @@
 'use strict';
-/* KR BURGER & PIZZA — service worker sin dependencias (v6).
+/* KR BURGER & PIZZA — service worker sin dependencias (v7).
    Cache-first para los estáticos de la cápsula y network-first para ./data/.
    Nada bajo /app/ se cachea a propósito (admin y scripts del taller).
-   VERSION v6 invalida los caches de las iteraciones anteriores. */
-const VERSION = 'v6';
+   VERSION v7 invalida los caches anteriores (incluida la imagen vieja de MaximumBurger). */
+const VERSION = 'v7';
 const CACHE_ESTATICOS = `kr-burger-estaticos-${VERSION}`;
 const CACHE_DATOS = `kr-burger-datos-${VERSION}`;
 const ESTATICOS = [
