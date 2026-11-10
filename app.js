@@ -106,8 +106,8 @@
     }, 3500);
   }
 
-  // Respaldo del logo: si assets/ui/logo-kr.svg no se puede parsear (SVG mal formado),
-  // se usa el ícono PNG oficial. No se modifica el asset: solo se muestra el alternativo.
+  // Respaldo del logo: si el logo real no carga, se usa el ícono PNG oficial.
+  // No se modifica el asset: solo se muestra el alternativo.
   function repararLogo(logo) {
     if (!logo) return;
     const respaldo = rutaImagen('/assets/ui/icono-512.png');

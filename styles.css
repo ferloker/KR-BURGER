@@ -307,8 +307,11 @@ ul {
 }
 
 .splash-logo {
-  width: clamp(8.5rem, 34vw, 10.5rem);
+  /* Logo real completo: ancho fluido, alto automático y contain para no recortar nada. */
+  width: clamp(13rem, 56vw, 21rem);
+  max-width: 88vw;
   height: auto;
+  object-fit: contain;
   border: 1px solid var(--borde);
   border-radius: var(--radio-panel);
   background: var(--fondo);
@@ -385,11 +388,15 @@ ul {
 }
 
 .marca-logo {
+  /* El logo es apaisado: alto fijo y ancho automático (antes se deformaba a 40x40). */
   flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: auto;
+  height: 2.4rem;
+  max-width: 6rem;
+  object-fit: contain;
   border: 1px solid var(--borde);
   border-radius: var(--radio-chico);
+  background: var(--fondo);
 }
 
 .marca-textos {
@@ -1977,7 +1984,7 @@ ul {
 
 @media (max-width: 22rem) {
   .splash-logo {
-    width: 7rem;
+    width: 68vw;
   }
 
   .boton-splash {
