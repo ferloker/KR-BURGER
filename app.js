@@ -309,6 +309,9 @@
     for (const categoria of Array.isArray(menu.categorias) ? menu.categorias : []) {
       if (!categoria || typeof categoria.id !== 'string') continue;
       const items = Array.isArray(categoria.items) ? categoria.items : [];
+      for (const item of items) {
+        if (item && typeof item === 'object') item.categoria = categoria.id;
+      }
       categorias.push({
         id: categoria.id,
         nombre: categoria.nombre || categoria.id,
@@ -343,6 +346,20 @@
       if (categoria.items.some((item) => item && item.id === idProducto)) return categoria.id;
     }
     return null;
+  }
+
+  // Encuadre por categoría: las botellas suben un poco (tapa con poco aire arriba);
+  // las pizzas bajan un poco para no cortar el disco.
+  const POSICION_IMAGEN = {
+    bebidas: '50% 28%',
+    cervezas: '50% 28%',
+    pizzas: '50% 35%'
+  };
+
+  function posicionImagen(item) {
+    if (!item) return '50% 50%';
+    const categoria = item.categoria || categoriaDeProducto(item.id);
+    return POSICION_IMAGEN[categoria] || '50% 50%';
   }
 
   function resumenIncluye(combo) {
@@ -677,6 +694,7 @@
     abrir.setAttribute('aria-label', item.agotado ? `${item.nombre} (agotado)` : `Ver ${item.nombre}`);
 
     const figura = el('div', 'tarjeta-figura');
+    figura.style.setProperty('--pos-imagen', posicionImagen(item));
     const foto = imagen('', item.imagen, item.nombre, true);
     foto.width = 512;
     foto.height = 512;
@@ -725,6 +743,7 @@
       const resuelta = rutaImagen(item.imagen);
       if (resuelta) foto.src = resuelta;
       foto.alt = item.nombre;
+      foto.style.setProperty('--pos-imagen', posicionImagen(item));
     }
     if ($('dp-titulo')) $('dp-titulo').textContent = item.nombre;
     const esCombo = item.tipo === 'combo';

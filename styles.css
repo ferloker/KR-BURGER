@@ -818,9 +818,10 @@ ul {
   display: block;
   width: 100%;
   height: 100%;
-  /* Las fotos reales llenan todo el panel (sin marco vacío alrededor). */
+  /* Las fotos reales llenan todo el panel; el encuadre fino se define por categoría
+     (gaseosas muestran la tapa, pizzas un poco más abajo, hamburguesas al centro). */
   object-fit: cover;
-  object-position: center;
+  object-position: var(--pos-imagen, 50% 50%);
 }
 
 .tarjeta.agotada .tarjeta-figura img {
@@ -1235,6 +1236,7 @@ ul {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--pos-imagen, 50% 50%);
 }
 
 .dp-hero::after {
