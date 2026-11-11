@@ -198,7 +198,6 @@
       if (nodo && texto) nodo.textContent = texto;
     };
     asignar('ubicacion-direccion', ubicacion.direccion || negocio.direccion);
-    asignar('ubicacion-delivery', ubicacion.delivery);
     asignar('pie-horario', negocio.horario);
     const enlace = $('link-mapa');
     const url = urlSegura(ubicacion.mapa_url);

@@ -1,10 +1,10 @@
 'use strict';
-/* KR BURGER & PIZZA — service worker sin dependencias (v18).
+/* KR BURGER & PIZZA — service worker sin dependencias (v19).
    Shell (HTML/CSS/JS/manifest) network-first: al recargar siempre se ve la última versión.
    Imágenes y fuentes cache-first (rápidas, offline); ./data/ network-first.
    Nada bajo /app/ se cachea a propósito (admin y scripts del taller).
    Al cambiar un asset estático, subir VERSION para limpiar las cachés viejas. */
-const VERSION = 'v18';
+const VERSION = 'v19';
 const CACHE_ESTATICOS = `kr-burger-estaticos-${VERSION}`;
 const CACHE_DATOS = `kr-burger-datos-${VERSION}`;
 const ESTATICOS = [

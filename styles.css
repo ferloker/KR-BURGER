@@ -24,7 +24,7 @@
   --foco: #fff3b0;
   --hairline: rgba(46, 139, 87, 0.35);
   --panel-velo: rgba(10, 10, 10, 0.9);
-  --panel-vidrio: rgba(26, 26, 26, 0.72);
+  --panel-vidrio: rgba(26, 26, 26, 0.34);
   --sombra: rgba(0, 0, 0, 0.55);
   --velo: rgba(0, 0, 0, 0.72);
   --velo-suave: rgba(0, 0, 0, 0.45);
@@ -278,7 +278,7 @@ ul {
   mask-repeat: repeat;
   -webkit-mask-size: 300px 208px;
   mask-size: 300px 208px;
-  opacity: 0.24;
+  opacity: 0.18;
   animation: tabla-mover 42s linear infinite;
   will-change: transform;
 }
@@ -311,16 +311,6 @@ ul {
   100% {
     transform: translate3d(-4%, -2%, 0);
   }
-}
-
-/* La capa oscura garantiza que la tabla NUNCA tape el texto del splash. */
-.splash::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, var(--velo-suave) 0%, var(--fondo) 72%);
 }
 
 .splash-contenido {
@@ -519,15 +509,17 @@ ul {
 }
 
 /* Paneles translúcidos: el texto y las categorías se apoyan sobre algo,
-   en vez de flotar sobre la tabla periódica. */
+   sin tapar el fondo (sin blur, para que no queden manchas). */
 .panel-vidrio {
   padding: var(--esp-4);
   border: 1px solid var(--hairline);
   border-radius: var(--radio-panel);
   background: var(--panel-vidrio);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
-  backdrop-filter: blur(14px) saturate(130%);
-  box-shadow: var(--sombra-ios);
+}
+
+.portada.panel-vidrio {
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* Large title de la home (solo título + chip de horario) */
@@ -755,6 +747,8 @@ ul {
 
 #nav-categorias.panel-vidrio {
   padding: var(--esp-2);
+  border-color: transparent;
+  background: rgba(10, 10, 10, 0.22);
 }
 
 .categoria-tile {

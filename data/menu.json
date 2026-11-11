@@ -6,13 +6,12 @@
     "whatsapp": "595993417072",
     "moneda": "Gs",
     "horario": "Martes a domingo · 19:00 a 01:00",
-    "direccion": "Av. Mariscal López 1234, Asunción",
+    "direccion": "Gral. Bernardino Caballero y Humaitá, San Estanislao, Paraguay",
     "tagline": "Buen Sabor, Siempre",
     "mensaje_cierre": "¡Gracias por tu pedido!",
     "ubicacion": {
-      "direccion": "Av. Mariscal López 1234, Asunción",
-      "referencia": "A dos cuadras de la plaza central · zona céntrica",
-      "delivery": "Delivery en zona céntrica · 30 a 45 min",
+      "direccion": "Gral. Bernardino Caballero y Humaitá, San Estanislao, Paraguay",
+      "referencia": "Esquina Gral. Bernardino Caballero y Humaitá",
       "mapa_url": "https://maps.app.goo.gl/sM1WVyus7uiaBUFdA?g_st=aw"
     }
   },
