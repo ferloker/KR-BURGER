@@ -129,13 +129,14 @@
   </aside>
 
   <!-- Ficha de producto: imagen con nombre superpuesto, cuerpo scrolleable y pie fijo -->
-  <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">
+  <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo" aria-describedby="dp-instruccion">
+    <p class="sr-only" id="dp-instruccion">Deslizá sobre la imagen o usá las flechas izquierda y derecha para cambiar de producto.</p>
     <div class="dp-caja">
       <div class="dp-hero">
         <img class="dp-hero-img" id="dp-imagen" alt="" width="512" height="512" decoding="async">
         <button class="boton-cerrar boton-cerrar-flotante" id="dp-cerrar" type="button" aria-label="Cerrar ficha del producto">×</button>
         <div class="dp-hero-titulo">
-          <h2 class="dp-titulo" id="dp-titulo">Producto</h2>
+          <h2 class="dp-titulo" id="dp-titulo" tabindex="-1">Producto</h2>
           <span class="badge badge-18" id="dp-badge-18" hidden>18+</span>
         </div>
       </div>

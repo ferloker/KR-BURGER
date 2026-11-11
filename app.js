@@ -39,6 +39,9 @@
     ultimoBadge: 0,
     temporizadorToast: null
   };
+  // Estado del gesto horizontal y de la animación de cambio de producto en la ficha.
+  let gestoFicha = null;
+  let fichaAnimando = false;
 
   // ---------- Utilidades de DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -165,13 +168,14 @@
     clon.style.width = `${desde.width}px`;
     clon.style.height = `${desde.height}px`;
     clon.style.objectFit = 'cover';
+    clon.style.borderRadius = '14px';
     document.body.appendChild(clon);
     const dx = hasta.left + hasta.width / 2 - (desde.left + desde.width / 2);
     const dy = hasta.top + hasta.height / 2 - (desde.top + desde.height / 2);
     const animacion = clon.animate(
       [
-        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-        { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0.25 }
+        { transform: 'translate(0, 0) scale(1)', opacity: 1, borderRadius: '14px' },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0.25, borderRadius: '50%' }
       ],
       { duration: 400, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' }
     );
@@ -453,10 +457,70 @@
     pizzas: '50% 35%'
   };
 
+  // En escritorio la tarjeta es más ancha y baja (150 px): las hamburguesas
+  // dobles y los acompañantes necesitan mostrar más el tope del producto.
+  const POSICION_IMAGEN_ESCRITORIO = {
+    'maximum-burger': '50% 30%',
+    'heisenberg-doble': '50% 30%',
+    'papas-fritas': '50% 30%',
+    'papas-cheddar': '50% 30%',
+    'aros-cebolla': '50% 30%',
+    nuggets: '50% 30%'
+  };
+
+  // La ficha usa un encuadre más alto que la tarjeta para no cortar el pan,
+  // el tope de los acompañantes ni la tapa de las gaseosas.
+  const POSICION_IMAGEN_MODAL = {
+    'maximum-burger': '50% 30%',
+    'heisenberg-doble': '50% 30%',
+    'papas-fritas': '50% 35%',
+    'papas-cheddar': '50% 35%',
+    'aros-cebolla': '50% 35%',
+    nuggets: '50% 35%',
+    'coca-cola-2l': '50% 20%',
+    'coca-cola-1l': '50% 20%',
+    'coca-cola-500ml': '50% 20%'
+  };
+
+  function esEscritorio() {
+    return window.matchMedia('(min-width: 48rem)').matches;
+  }
+
   function posicionImagen(item) {
     if (!item) return '50% 50%';
     const categoria = item.categoria || categoriaDeProducto(item.id);
-    return POSICION_IMAGEN[categoria] || '50% 50%';
+    const base = POSICION_IMAGEN[categoria] || '50% 50%';
+    if (!esEscritorio()) return base;
+    return POSICION_IMAGEN_ESCRITORIO[item.id] || base;
+  }
+
+  function posicionImagenModal(item) {
+    if (!item) return '50% 50%';
+    if (POSICION_IMAGEN_MODAL[item.id]) return POSICION_IMAGEN_MODAL[item.id];
+    return posicionImagen(item);
+  }
+
+  // Si cambia el ancho (móvil ↔ escritorio) se reajustan las tarjetas ya
+  // montadas y la ficha abierta, sin recargar ni re-renderizar.
+  function actualizarPosicionesImagenes() {
+    for (const figura of document.querySelectorAll('.tarjeta-figura[data-item]')) {
+      const item = buscarProducto(figura.dataset.item);
+      if (item) figura.style.setProperty('--pos-imagen', posicionImagen(item));
+    }
+    const dialogo = $('dialogo-producto');
+    const foto = $('dp-imagen');
+    if (dialogo && dialogo.open && foto && estado.producto) {
+      foto.style.setProperty('--pos-imagen', posicionImagenModal(estado.producto.item));
+    }
+  }
+
+  function conectarEncuadreResponsive() {
+    const consulta = window.matchMedia('(min-width: 48rem)');
+    if (typeof consulta.addEventListener === 'function') {
+      consulta.addEventListener('change', actualizarPosicionesImagenes);
+    } else if (typeof consulta.addListener === 'function') {
+      consulta.addListener(actualizarPosicionesImagenes);
+    }
   }
 
   function resumenIncluye(combo) {
@@ -888,6 +952,7 @@
     );
 
     const figura = el('div', 'tarjeta-figura');
+    figura.dataset.item = item.id;
     figura.style.setProperty('--pos-imagen', posicionImagen(item));
     const foto = imagen('', item.imagen, item.nombre, true);
     foto.width = 512;
@@ -927,8 +992,48 @@
   }
 
   // ---------- Diálogo de producto ----------
-  function abrirProducto(item) {
-    if (!item || item.agotado) return;
+  // Productos con los que se puede swipear: ítems de la misma categoría o, para
+  // combos, la lista completa de combos.
+  function itemsFicha(item) {
+    if (!item) return [];
+    if (estado.combos.some((combo) => combo.id === item.id)) return estado.combos;
+    const categoria = estado.categorias.find((cat) => cat.items.some((i) => i.id === item.id));
+    return categoria ? categoria.items : [];
+  }
+
+  function actualizarInstruccionFicha(item) {
+    const instruccion = $('dp-instruccion');
+    if (!instruccion) return;
+    instruccion.hidden = itemsFicha(item).length < 2;
+  }
+
+  function animarCambioFicha(direccion) {
+    const hero = document.querySelector('.dp-hero');
+    if (!hero) return;
+    if (prefiereMenosMovimiento() || typeof hero.animate !== 'function') {
+      fichaAnimando = false;
+      return;
+    }
+    fichaAnimando = true;
+    const desplazamiento = direccion > 0 ? 36 : -36;
+    const animacion = hero.animate(
+      [
+        { opacity: 0.35, transform: `translateX(${desplazamiento}px)` },
+        { opacity: 1, transform: 'translateX(0)' }
+      ],
+      { duration: 180, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' }
+    );
+    const terminar = () => {
+      fichaAnimando = false;
+    };
+    animacion.addEventListener('finish', terminar, { once: true });
+    animacion.addEventListener('cancel', terminar, { once: true });
+    setTimeout(terminar, 360);
+  }
+
+  // Muestra un producto dentro de la ficha ya abierta y resetea la configuración.
+  function mostrarProductoEnFicha(item, opciones) {
+    const ajustes = opciones || {};
     estado.producto = {
       item,
       cantidad: 1,
@@ -936,14 +1041,13 @@
       extras: new Set(),
       sin: new Set()
     };
-    estado.scrollModal = window.scrollY;
-    const dialogo = $('dialogo-producto');
     const foto = $('dp-imagen');
     if (foto) {
       const resuelta = rutaImagen(item.imagen);
       if (resuelta) foto.src = resuelta;
       foto.alt = item.nombre;
-      foto.style.setProperty('--pos-imagen', posicionImagen(item));
+      foto.dataset.item = item.id;
+      foto.style.setProperty('--pos-imagen', posicionImagenModal(item));
     }
     if ($('dp-titulo')) $('dp-titulo').textContent = item.nombre;
     const esCombo = item.tipo === 'combo';
@@ -963,7 +1067,77 @@
     if (cuerpoModal) cuerpoModal.scrollTop = 0;
     if ($('dp-cantidad')) $('dp-cantidad').textContent = '1';
     actualizarTotalProducto();
-    abrirDialogo(dialogo);
+    actualizarInstruccionFicha(item);
+    if (ajustes.animar) animarCambioFicha(ajustes.direccion || 1);
+  }
+
+  function navegarFicha(delta) {
+    if (!estado.producto || fichaAnimando) return;
+    const actual = estado.producto.item;
+    const lista = itemsFicha(actual);
+    if (lista.length < 2) return;
+    const indice = lista.findIndex((item) => item.id === actual.id);
+    if (indice < 0) return;
+    const siguiente = lista[(indice + delta + lista.length) % lista.length];
+    if (!siguiente || siguiente.agotado) return;
+    mostrarProductoEnFicha(siguiente, { animar: true, direccion: delta });
+    const titulo = $('dp-titulo');
+    if (titulo) titulo.focus({ preventScroll: true });
+  }
+
+  function abrirProducto(item) {
+    if (!item || item.agotado) return;
+    estado.scrollModal = window.scrollY;
+    mostrarProductoEnFicha(item);
+    abrirDialogo($('dialogo-producto'));
+  }
+
+  function conectarGestoFicha() {
+    const hero = document.querySelector('.dp-hero');
+    if (!hero) return;
+    hero.addEventListener('pointerdown', (evento) => {
+      if (evento.button !== undefined && evento.button !== 0) return;
+      if (evento.target.closest('button, input, a, label, select, textarea')) return;
+      gestoFicha = { x: evento.clientX, y: evento.clientY, pointerId: evento.pointerId };
+      try {
+        hero.setPointerCapture(evento.pointerId);
+      } catch (error) {
+        // Sin captura el pointerup puede caer fuera; se resuelve en el listener global.
+      }
+    });
+    const terminarGesto = (evento) => {
+      if (!gestoFicha) return;
+      if (gestoFicha.pointerId !== undefined && evento.pointerId !== gestoFicha.pointerId) return;
+      const dx = evento.clientX - gestoFicha.x;
+      const dy = evento.clientY - gestoFicha.y;
+      gestoFicha = null;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        navegarFicha(dx < 0 ? 1 : -1);
+      }
+    };
+    hero.addEventListener('pointerup', terminarGesto);
+    window.addEventListener('pointerup', (evento) => {
+      if (!gestoFicha) return;
+      const estaEnHero = hero.contains(evento.target);
+      if (!estaEnHero) terminarGesto(evento);
+    });
+    hero.addEventListener('pointercancel', () => {
+      gestoFicha = null;
+    });
+  }
+
+  function conectarTecladoFicha() {
+    document.addEventListener('keydown', (evento) => {
+      const dialogo = $('dialogo-producto');
+      if (!dialogo || !dialogo.open) return;
+      if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return;
+      const objetivo = evento.target;
+      if (objetivo && objetivo.closest && objetivo.closest('input, textarea, select, [contenteditable="true"]')) {
+        return;
+      }
+      evento.preventDefault();
+      navegarFicha(evento.key === 'ArrowRight' ? 1 : -1);
+    });
   }
 
   function construirOpcionesProducto(item) {
@@ -1641,6 +1815,9 @@
     for (const logo of document.querySelectorAll('.splash-logo, .marca-logo')) repararLogo(logo);
     conectarHistorial();
     conectarInstalacion();
+    conectarGestoFicha();
+    conectarTecladoFicha();
+    conectarEncuadreResponsive();
 
     const entrar = $('btn-entrar');
     if (entrar) entrar.addEventListener('click', entrarAlMenu);
@@ -1679,6 +1856,8 @@
     const dialogoProducto = $('dialogo-producto');
     if (dialogoProducto) {
       dialogoProducto.addEventListener('close', () => {
+        gestoFicha = null;
+        fichaAnimando = false;
         if (estado.scrollModal === null) return;
         const y = estado.scrollModal;
         estado.scrollModal = null;

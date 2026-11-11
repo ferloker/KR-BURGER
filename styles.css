@@ -160,6 +160,19 @@ ul {
   transform: translateY(0);
 }
 
+/* Texto solo para lectores de pantalla (instrucción de swipe de la ficha) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .aviso {
   max-width: var(--ancho-max);
   margin: var(--esp-4) auto;
@@ -901,7 +914,8 @@ ul {
   width: 100%;
   height: 100%;
   /* Las fotos reales llenan todo el panel; el encuadre fino se define por categoría
-     (gaseosas muestran la tapa, pizzas un poco más abajo, hamburguesas al centro). */
+     (gaseosas muestran la tapa, pizzas un poco más abajo, hamburguesas al centro).
+     En escritorio y en la ficha, app.js ajusta --pos-imagen por producto. */
   object-fit: cover;
   object-position: var(--pos-imagen, 50% 50%);
 }
@@ -1399,6 +1413,8 @@ ul {
   overflow: hidden;
   background: var(--fondo);
   border-radius: var(--radio-panel) var(--radio-panel) 0 0;
+  /* Pan-y: el scroll vertical sigue nativo y el gesto horizontal lo maneja el swipe. */
+  touch-action: pan-y;
 }
 
 .dp-hero-img {
