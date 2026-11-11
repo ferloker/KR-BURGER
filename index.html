@@ -57,7 +57,7 @@
 
     <!-- Pantalla 1: ¿qué se te antoja hoy? Combos + categorías -->
     <div class="pantalla" id="pantalla-categorias" aria-hidden="false">
-      <header class="portada">
+      <header class="portada panel-vidrio">
         <h1 class="portada-titulo" id="titulo-portada" tabindex="-1">¿Qué se te antoja hoy?</h1>
         <p class="portada-horario" id="portada-horario">Martes a domingo · 19:00 a 01:00</p>
       </header>
@@ -66,15 +66,12 @@
         <div class="seccion-cabecera">
           <h2 class="seccion-titulo" id="titulo-combos">Combos</h2>
           <p class="seccion-subtitulo">Para compartir o pedir completo</p>
-          <div class="combos-controles">
-            <button class="combo-control" id="combos-prev" type="button" aria-label="Combo anterior">‹</button>
-            <button class="combo-control" id="combos-next" type="button" aria-label="Combo siguiente">›</button>
-          </div>
         </div>
-        <div class="carrusel" id="carrusel-combos" aria-roledescription="carrusel" aria-label="Combos destacados"></div>
+        <div class="carrusel" id="carrusel-combos" aria-roledescription="carrusel" aria-label="Combos destacados" tabindex="0"></div>
+        <div class="combos-puntos" id="combos-puntos" role="group" aria-label="Elegir combo"></div>
       </section>
 
-      <nav class="seccion" id="nav-categorias" role="tablist" aria-label="Categorías del menú"></nav>
+      <nav class="seccion panel-vidrio" id="nav-categorias" role="tablist" aria-label="Categorías del menú"></nav>
 
       <section class="seccion ubicacion" id="ubicacion" aria-labelledby="titulo-ubicacion">
         <div class="ubicacion-card">

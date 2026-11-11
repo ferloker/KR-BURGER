@@ -24,6 +24,7 @@
   --foco: #fff3b0;
   --hairline: rgba(46, 139, 87, 0.35);
   --panel-velo: rgba(10, 10, 10, 0.9);
+  --panel-vidrio: rgba(26, 26, 26, 0.72);
   --sombra: rgba(0, 0, 0, 0.55);
   --velo: rgba(0, 0, 0, 0.72);
   --velo-suave: rgba(0, 0, 0, 0.45);
@@ -517,12 +518,24 @@ ul {
   }
 }
 
+/* Paneles translúcidos: el texto y las categorías se apoyan sobre algo,
+   en vez de flotar sobre la tabla periódica. */
+.panel-vidrio {
+  padding: var(--esp-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radio-panel);
+  background: var(--panel-vidrio);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(14px) saturate(130%);
+  box-shadow: var(--sombra-ios);
+}
+
 /* Large title de la home (solo título + chip de horario) */
 .portada {
   display: flex;
   flex-direction: column;
   gap: var(--esp-2);
-  padding: var(--esp-5) 0 var(--esp-4);
+  padding: var(--esp-5) var(--esp-4);
 }
 
 .portada-titulo {
@@ -584,36 +597,50 @@ ul {
   font-size: var(--fs-chico);
 }
 
-/* Controles prev/next del carrusel de combos (autoplay accesible) */
-.combos-controles {
+/* Navegación de combos: puntos debajo del carrusel (sin flechas grandes) */
+.combos-puntos {
   display: flex;
-  gap: var(--esp-1);
-  margin-left: auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  padding-block: var(--esp-2) 0;
 }
 
-.combo-control {
-  display: inline-grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid var(--hairline);
+.punto-combo {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
   border-radius: var(--radio-pastilla);
-  background: var(--superficie);
-  color: var(--texto);
-  font-size: 1.3rem;
-  line-height: 1;
+  background: transparent;
   cursor: pointer;
-  transition: border-color var(--dur) var(--curva), color var(--dur) var(--curva),
-    background-color var(--dur) var(--curva), transform var(--dur) var(--curva);
 }
 
-.combo-control:hover {
-  border-color: var(--acento);
-  color: var(--acento);
+.punto-combo::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radio-pastilla);
+  background: var(--texto-suave);
+  opacity: 0.5;
+  transform: translate(-50%, -50%);
+  transition: width var(--dur) var(--curva), opacity var(--dur) var(--curva),
+    background-color var(--dur) var(--curva);
 }
 
-.combo-control:active {
-  transform: scale(0.95);
+.punto-combo:hover::before {
+  opacity: 0.85;
+}
+
+.punto-combo[aria-current="true"]::before {
+  width: 1.25rem;
+  background: var(--acento);
+  opacity: 1;
 }
 
 /* Combos: carrusel horizontal con una tarjeta por vista en móvil */
@@ -627,6 +654,14 @@ ul {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  cursor: grab;
+}
+
+.carrusel.arrastrando {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  user-select: none;
 }
 
 .carrusel::-webkit-scrollbar {
@@ -718,6 +753,10 @@ ul {
   gap: var(--esp-2);
 }
 
+#nav-categorias.panel-vidrio {
+  padding: var(--esp-2);
+}
+
 .categoria-tile {
   display: flex;
   align-items: center;
@@ -749,8 +788,8 @@ ul {
 
 .categoria-icono {
   flex: 0 0 auto;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border: 1px solid var(--hairline);
   border-radius: var(--radio-chico);
   background: var(--panel);
@@ -765,14 +804,17 @@ ul {
 }
 
 .categoria-nombre {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--texto);
   font-family: var(--fuente-titulo);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .categoria-tile[aria-selected="true"] .categoria-nombre {

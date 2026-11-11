@@ -381,6 +381,38 @@
     if (!carrusel) return;
     carrusel.replaceChildren();
     for (const combo of estado.combos) carrusel.appendChild(crearComboCard(combo));
+    renderPuntosCombos();
+  }
+
+  // Puntos debajo del carrusel: indican en qué combo estamos y permiten ir a otro.
+  function renderPuntosCombos() {
+    const contenedor = $('combos-puntos');
+    if (!contenedor) return;
+    contenedor.replaceChildren();
+    estado.combos.forEach((combo, indice) => {
+      const punto = boton('punto-combo', '', `Ir al combo ${indice + 1}: ${combo.nombre}`);
+      punto.type = 'button';
+      punto.dataset.indice = String(indice);
+      if (indice === estado.comboIndice) punto.setAttribute('aria-current', 'true');
+      contenedor.appendChild(punto);
+    });
+  }
+
+  function actualizarPuntosCombos(indice) {
+    const contenedor = $('combos-puntos');
+    if (!contenedor) return;
+    [...contenedor.children].forEach((punto, posicion) => {
+      if (posicion === indice) punto.setAttribute('aria-current', 'true');
+      else punto.removeAttribute('aria-current');
+    });
+  }
+
+  function irAlCombo(indice) {
+    const total = estado.combos.length;
+    if (!total) return;
+    estado.comboIndice = ((indice % total) + total) % total;
+    desplazarCombo(estado.comboIndice);
+    actualizarPuntosCombos(estado.comboIndice);
   }
 
   function crearComboCard(combo) {
@@ -426,6 +458,7 @@
       left: destino,
       behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth'
     });
+    actualizarPuntosCombos(indice);
   }
 
   function avanzarCombo(paso) {
@@ -448,26 +481,34 @@
   function iniciarCombos() {
     const carrusel = $('carrusel-combos');
     if (!carrusel) return;
-    const prev = $('combos-prev');
-    const next = $('combos-next');
     const pausar = () => {
       estado.comboPausado = true;
     };
     const reanudar = () => {
       estado.comboPausado = false;
     };
-    if (next) {
-      next.addEventListener('click', () => {
+    const puntos = $('combos-puntos');
+    if (puntos) {
+      puntos.addEventListener('click', (evento) => {
+        const punto = evento.target.closest('.punto-combo');
+        if (!punto) return;
+        const indice = Number(punto.dataset.indice);
+        if (!Number.isFinite(indice)) return;
+        irAlCombo(indice);
+        reiniciarAutoplay();
+      });
+    }
+    carrusel.addEventListener('keydown', (evento) => {
+      if (evento.key === 'ArrowRight') {
+        evento.preventDefault();
         avanzarCombo(1);
         reiniciarAutoplay();
-      });
-    }
-    if (prev) {
-      prev.addEventListener('click', () => {
+      } else if (evento.key === 'ArrowLeft') {
+        evento.preventDefault();
         avanzarCombo(-1);
         reiniciarAutoplay();
-      });
-    }
+      }
+    });
     carrusel.addEventListener('mouseenter', pausar);
     carrusel.addEventListener('mouseleave', reanudar);
     carrusel.addEventListener('focusin', pausar);
@@ -478,16 +519,68 @@
     carrusel.addEventListener('touchend', reanudar, { passive: true });
     carrusel.addEventListener('pointerdown', pausar);
     carrusel.addEventListener('pointerup', reanudar);
-    const controles = prev ? prev.parentElement : null;
-    if (controles) {
-      controles.addEventListener('focusin', pausar);
-      controles.addEventListener('focusout', (evento) => {
-        if (!controles.contains(evento.relatedTarget)) reanudar();
-      });
-      controles.addEventListener('mouseenter', pausar);
-      controles.addEventListener('mouseleave', reanudar);
-    }
-    // Sincroniza el índice cuando el usuario desliza a mano (una tarjeta por paso).
+
+    // Arrastrar con el mouse en escritorio (en el teléfono ya se desliza con el dedo).
+    let arrastrando = false;
+    let inicioX = 0;
+    let inicioScroll = 0;
+    let movido = false;
+    let suprimirClick = false;
+    let temporizadorSuprimir = null;
+    carrusel.addEventListener('pointerdown', (evento) => {
+      if (evento.pointerType !== 'mouse') return;
+      arrastrando = true;
+      movido = false;
+      inicioX = evento.clientX;
+      inicioScroll = carrusel.scrollLeft;
+      carrusel.classList.add('arrastrando');
+      if (carrusel.setPointerCapture) {
+        try {
+          carrusel.setPointerCapture(evento.pointerId);
+        } catch (error) {
+          // Si el navegador no permite capturar, seguimos igual.
+        }
+      }
+    });
+    carrusel.addEventListener('pointermove', (evento) => {
+      if (!arrastrando) return;
+      const desplazamiento = evento.clientX - inicioX;
+      if (Math.abs(desplazamiento) > 6) movido = true;
+      carrusel.scrollLeft = inicioScroll - desplazamiento;
+    });
+    const terminarArrastre = (evento) => {
+      if (!arrastrando) return;
+      arrastrando = false;
+      carrusel.classList.remove('arrastrando');
+      if (carrusel.releasePointerCapture && evento.pointerId !== undefined) {
+        try {
+          carrusel.releasePointerCapture(evento.pointerId);
+        } catch (error) {
+          // Sin captura previa: no pasa nada.
+        }
+      }
+      if (movido) {
+        suprimirClick = true;
+        clearTimeout(temporizadorSuprimir);
+        temporizadorSuprimir = setTimeout(() => {
+          suprimirClick = false;
+        }, 0);
+      }
+    };
+    carrusel.addEventListener('pointerup', terminarArrastre);
+    carrusel.addEventListener('pointercancel', terminarArrastre);
+    carrusel.addEventListener(
+      'click',
+      (evento) => {
+        if (!suprimirClick) return;
+        evento.preventDefault();
+        evento.stopPropagation();
+        suprimirClick = false;
+      },
+      true
+    );
+
+    // Sincroniza el índice y los puntos cuando el usuario desliza a mano (una tarjeta por paso).
     let temporizadorDesliz = null;
     carrusel.addEventListener('scroll', () => {
       clearTimeout(temporizadorDesliz);
@@ -495,6 +588,7 @@
         const paso = pasoCombos(carrusel);
         if (!paso || !estado.combos.length) return;
         estado.comboIndice = Math.round(carrusel.scrollLeft / paso) % estado.combos.length;
+        actualizarPuntosCombos(estado.comboIndice);
       }, 140);
     });
     reiniciarAutoplay();
