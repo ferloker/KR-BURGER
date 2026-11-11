@@ -151,8 +151,20 @@
   <footer class="pie">
     <p class="pie-horario" id="pie-horario">Martes a domingo · 19:00 a 01:00</p>
     <p class="pie-nota">Pedidos por WhatsApp · Asunción, Paraguay</p>
+    <button class="boton-secundario instalar-pie" id="instalar-pie" type="button">Instalar la app</button>
     <p class="pie-credito">KR BURGER &amp; PIZZA · Hecho por FERLOKER INDUSTRY</p>
   </footer>
+
+  <!-- Aviso de instalación PWA: en Android/Chrome aparece el prompt; en iPhone se explican los pasos -->
+  <aside class="instalar" id="instalar-app" aria-labelledby="instalar-titulo" hidden>
+    <img class="instalar-icono" src="assets/ui/icono-192.png" alt="" width="48" height="48">
+    <div class="instalar-texto">
+      <p class="instalar-titulo" id="instalar-titulo">Instalá KR BURGER</p>
+      <p class="instalar-nota" id="instalar-nota">Agregala a tu pantalla de inicio para pedir más rápido.</p>
+    </div>
+    <button class="boton-primario instalar-boton" id="instalar-boton" type="button">Instalar</button>
+    <button class="boton-cerrar instalar-cerrar" id="instalar-cerrar" type="button" aria-label="Ocultar aviso de instalación">×</button>
+  </aside>
 
   <!-- Ficha de producto: imagen con nombre superpuesto, cuerpo scrolleable y pie fijo -->
   <dialog class="dialogo dialogo-producto" id="dialogo-producto" aria-labelledby="dp-titulo">

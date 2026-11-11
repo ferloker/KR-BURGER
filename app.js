@@ -16,6 +16,7 @@
     color_panel: '--panel',
     color_verde: '--verde'
   };
+  const CLAVE_INSTALAR = 'kr-burger-instalar-oculto';
   const formateador = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 });
   const estado = {
     menu: null,
@@ -1217,10 +1218,7 @@
   }
 
   function mensajePedido() {
-    const negocio = (estado.menu && estado.menu.negocio) || {};
-    const ubicacion = negocio.ubicacion || {};
-    // Una línea por producto (sin repetir "1x nombre"): la cabecera lleva el nombre y,
-    // si pidió más de uno, la cantidad; debajo solo van borde / sin / extras.
+    // Solo el pedido, la cantidad y el total: sin dirección, calle ni referencias.
     const lineas = ['*NUEVO PEDIDO - KR BURGER*', '_Pedido desde el menú digital_', ''];
     let numero = 0;
     for (const linea of estado.lineas) {
@@ -1246,13 +1244,6 @@
     }
     const modalidad = modalidadElegida();
     lineas.push('', `*Total:* ${gs(totalCarrito())}`, `*Modalidad:* ${modalidad}`);
-    const direccion = ubicacion.direccion || negocio.direccion;
-    // La dirección que se comparte es la del local: se rotula para no confundirla con
-    // una dirección de entrega, y el canal de origen queda identificado arriba.
-    if (direccion) lineas.push(`📍 Local: ${direccion}`);
-    if (modalidad === 'Delivery' && ubicacion.referencia) {
-      lineas.push(`Referencia del local: ${ubicacion.referencia}`);
-    }
     return lineas.join('\n');
   }
 
@@ -1284,6 +1275,111 @@
     cerrarDialogo($('dialogo-carrito'));
     vaciarCarrito();
     mostrarToast('Pedido enviado por WhatsApp. El carrito quedó vacío para tu próxima compra.');
+  }
+
+  // ---------- Instalación como app (PWA) ----------
+  let eventoInstalar = null;
+
+  function esModoApp() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  function esIOS() {
+    return (
+      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+  }
+
+  function mostrarInstalar(modo) {
+    const aviso = $('instalar-app');
+    if (!aviso) return;
+    let oculto = false;
+    try {
+      oculto = localStorage.getItem(CLAVE_INSTALAR) === '1';
+    } catch (error) {
+      // Modo privado: se muestra igual.
+    }
+    if (esModoApp() || oculto) return;
+    const nota = $('instalar-nota');
+    const boton = $('instalar-boton');
+    if (modo === 'ios') {
+      if (nota) nota.textContent = 'En iPhone: tocá Compartir y elegí “Agregar a pantalla de inicio”.';
+      if (boton) boton.textContent = 'Cómo instalar';
+    } else {
+      if (nota) nota.textContent = 'Agregala a tu pantalla de inicio para pedir más rápido.';
+      if (boton) boton.textContent = 'Instalar';
+    }
+    aviso.hidden = false;
+  }
+
+  function ocultarInstalar(recordar) {
+    const aviso = $('instalar-app');
+    if (aviso) aviso.hidden = true;
+    if (!recordar) return;
+    try {
+      localStorage.setItem(CLAVE_INSTALAR, '1');
+    } catch (error) {
+      // Modo privado: se oculta solo en esta visita.
+    }
+  }
+
+  function conectarInstalacion() {
+    window.addEventListener('beforeinstallprompt', (evento) => {
+      evento.preventDefault();
+      eventoInstalar = evento;
+      mostrarInstalar('prompt');
+    });
+    window.addEventListener('appinstalled', () => {
+      eventoInstalar = null;
+      ocultarInstalar(true);
+      mostrarToast('¡Listo! KR BURGER quedó instalada.');
+    });
+    const botonInstalar = $('instalar-boton');
+    if (botonInstalar) {
+      botonInstalar.addEventListener('click', async () => {
+        if (eventoInstalar && typeof eventoInstalar.prompt === 'function') {
+          eventoInstalar.prompt();
+          try {
+            await eventoInstalar.userChoice;
+          } catch (error) {
+            // Si el navegador no devuelve la elección, seguimos.
+          }
+          eventoInstalar = null;
+          ocultarInstalar(true);
+          return;
+        }
+        if (esIOS()) {
+          mostrarInstalar('ios');
+          mostrarToast('En iPhone: Compartir → Agregar a pantalla de inicio.');
+          return;
+        }
+        mostrarToast('Abrí el menú del navegador y elegí “Instalar app” o “Agregar a pantalla de inicio”.');
+      });
+    }
+    const cerrar = $('instalar-cerrar');
+    if (cerrar) cerrar.addEventListener('click', () => ocultarInstalar(true));
+    const enPie = $('instalar-pie');
+    if (enPie) {
+      enPie.addEventListener('click', () => {
+        const aviso = $('instalar-app');
+        if (aviso && !aviso.hidden) {
+          if (botonInstalar) botonInstalar.click();
+          return;
+        }
+        if (eventoInstalar) {
+          mostrarInstalar('prompt');
+          if (botonInstalar) botonInstalar.click();
+          return;
+        }
+        if (esIOS()) {
+          mostrarInstalar('ios');
+          return;
+        }
+        mostrarToast('Abrí el menú del navegador y elegí “Instalar app” o “Agregar a pantalla de inicio”.');
+      });
+    }
+    if (esIOS() && !esModoApp()) mostrarInstalar('ios');
   }
 
   // ---------- Diálogos ----------
@@ -1346,6 +1442,7 @@
   function conectarEventosBase() {
     for (const logo of document.querySelectorAll('.splash-logo, .marca-logo')) repararLogo(logo);
     conectarHistorial();
+    conectarInstalacion();
 
     const entrar = $('btn-entrar');
     if (entrar) entrar.addEventListener('click', entrarAlMenu);
