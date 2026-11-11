@@ -1,0 +1,16 @@
+# Configuración de Netlify — KR BURGER & PIZZA
+# Este repositorio contiene SOLO el contenido de `public/` (lo exporta `git subtree split`).
+# Netlify publica la raíz del repo: no hay que configurar base directory ni build.
+
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache"
