@@ -36,6 +36,7 @@
     ruedaCentrando: false,
     ruedaCentradoTimer: null,
     ruedaScrollTimer: null,
+    ultimoBadge: 0,
     temporizadorToast: null
   };
 
@@ -99,12 +100,107 @@
   function mostrarToast(texto) {
     const toast = $('toast');
     if (!toast) return;
-    toast.textContent = texto;
+    toast.classList.remove('toast-exito');
+    toast.replaceChildren(el('span', 'toast-texto', texto));
     toast.hidden = false;
     clearTimeout(estado.temporizadorToast);
     estado.temporizadorToast = setTimeout(() => {
       toast.hidden = true;
+      toast.replaceChildren();
     }, 3500);
+  }
+
+  // Check animado sutil para confirmar el pedido enviado (SVG stroke ~500 ms).
+  function mostrarToastExito(texto) {
+    const toast = $('toast');
+    if (!toast) return;
+    const plantilla = $('tpl-check');
+    const icono = plantilla && plantilla.content ? plantilla.content.firstElementChild : null;
+    toast.classList.add('toast-exito');
+    toast.replaceChildren();
+    if (icono) {
+      const caja = el('span', 'toast-check');
+      caja.appendChild(icono.cloneNode(true));
+      toast.appendChild(caja);
+    }
+    toast.appendChild(el('span', 'toast-texto', texto));
+    toast.hidden = false;
+    clearTimeout(estado.temporizadorToast);
+    estado.temporizadorToast = setTimeout(() => {
+      toast.hidden = true;
+      toast.classList.remove('toast-exito');
+      toast.replaceChildren();
+    }, 4200);
+  }
+
+  // ---------- Microinteracciones: vuelo al carrito, pop del badge y morph ----------
+  function origenVisibleDe(item) {
+    if (!item) return null;
+    const dialog = $('dialogo-producto');
+    if (dialog && dialog.open && estado.producto && estado.producto.item && estado.producto.item.id === item.id) {
+      const imagenModal = $('dp-imagen');
+      if (imagenModal) return imagenModal;
+    }
+    const articulo = Array.from(document.querySelectorAll('#paneles-productos article.tarjeta')).find(
+      (nodo) => nodo.dataset.id === item.id
+    );
+    return articulo ? articulo.querySelector('.tarjeta-figura img') : null;
+  }
+
+  function volarAlCarrito(origen) {
+    if (!origen || prefiereMenosMovimiento()) return;
+    if (typeof origen.animate !== 'function') return;
+    const destino = $('contador-carrito') || $('abrir-carrito');
+    if (!destino) return;
+    const desde = origen.getBoundingClientRect();
+    if (!desde.width || !desde.height) return;
+    const hasta = destino.getBoundingClientRect();
+    const clon = origen.cloneNode(false);
+    clon.removeAttribute('width');
+    clon.removeAttribute('height');
+    clon.removeAttribute('loading');
+    clon.className = 'vuelo-carrito';
+    clon.style.top = `${desde.top}px`;
+    clon.style.left = `${desde.left}px`;
+    clon.style.width = `${desde.width}px`;
+    clon.style.height = `${desde.height}px`;
+    clon.style.objectFit = 'cover';
+    document.body.appendChild(clon);
+    const dx = hasta.left + hasta.width / 2 - (desde.left + desde.width / 2);
+    const dy = hasta.top + hasta.height / 2 - (desde.top + desde.height / 2);
+    const animacion = clon.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0.25 }
+      ],
+      { duration: 400, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' }
+    );
+    const limpiar = () => clon.remove();
+    animacion.addEventListener('finish', limpiar, { once: true });
+    animacion.addEventListener('cancel', limpiar, { once: true });
+    setTimeout(limpiar, 650);
+  }
+
+  function animarBadge(contador) {
+    if (!contador || prefiereMenosMovimiento()) return;
+    contador.classList.remove('pop');
+    void contador.offsetWidth;
+    contador.classList.add('pop');
+    const quitar = () => contador.classList.remove('pop');
+    contador.addEventListener('animationend', quitar, { once: true });
+    setTimeout(quitar, 400);
+  }
+
+  function morphAgregado(botonMas) {
+    if (!botonMas) return;
+    botonMas.classList.add('agregado');
+    botonMas.textContent = '✓';
+    clearTimeout(botonMas.temporizadorAgregado);
+    botonMas.temporizadorAgregado = setTimeout(() => {
+      if (!botonMas.isConnected) return;
+      botonMas.classList.remove('agregado');
+      botonMas.textContent = '+';
+    }, 700);
   }
 
   // Respaldo del logo: si el logo real no carga, se usa el ícono PNG oficial.
@@ -149,6 +245,7 @@
     renderRueda();
     renderUbicacion();
     cargarCarrito();
+    estado.ultimoBadge = unidadesCarrito();
     const inicial =
       estado.categorias.find((categoria) => categoria.id === ID_CATEGORIA_INICIAL) || estado.categorias[0];
     if (inicial) {
@@ -823,7 +920,7 @@
       item.agotado ? `${item.nombre} (agotado)` : `Agregar ${item.nombre} al carrito`
     );
     mas.disabled = Boolean(item.agotado);
-    mas.addEventListener('click', () => agregarDirecto(item));
+    mas.addEventListener('click', (evento) => agregarDirecto(item, evento.currentTarget));
 
     articulo.append(abrir, mas);
     return articulo;
@@ -1024,15 +1121,19 @@
 
   // El "+" de la tarjeta agrega directo con la configuración base (sin abrir la ficha).
   // La ficha queda para personalizar (borde, ingredientes, extras, cantidad).
-  function agregarDirecto(item) {
+  function agregarDirecto(item, botonMas) {
     if (!item || item.agotado) return;
+    const origen = origenVisibleDe(item);
     agregarLinea({ id: item.id, cantidad: 1, borde: false, extras: [], sin: [] });
+    volarAlCarrito(origen);
+    morphAgregado(botonMas);
     mostrarToast(`${item.nombre} agregado al carrito.`);
   }
 
   function agregarProductoAlCarrito() {
     const producto = estado.producto;
     if (!producto) return;
+    const origen = origenVisibleDe(producto.item);
     const ingredientes = Array.isArray(producto.item.ingredientes) ? producto.item.ingredientes : [];
     agregarLinea({
       id: producto.item.id,
@@ -1041,6 +1142,7 @@
       extras: Array.from(producto.extras).sort(),
       sin: ingredientes.filter((nombre) => producto.sin.has(nombre))
     });
+    volarAlCarrito(origen);
     cerrarDialogo($('dialogo-producto'));
     mostrarToast(`${producto.item.nombre} agregado al carrito.`);
   }
@@ -1202,6 +1304,7 @@
     const unidades = unidadesCarrito();
     const contador = $('contador-carrito');
     const abrir = $('abrir-carrito');
+    const subio = unidades > estado.ultimoBadge;
     if (contador) contador.textContent = String(unidades);
     if (abrir) {
       abrir.setAttribute(
@@ -1211,6 +1314,8 @@
     }
     const whatsapp = $('btn-whatsapp');
     if (whatsapp) whatsapp.disabled = estado.lineas.length === 0;
+    estado.ultimoBadge = unidades;
+    if (subio) animarBadge(contador);
   }
 
   function renderCarrito() {
@@ -1367,7 +1472,7 @@
     window.open(url, '_blank', 'noopener');
     cerrarDialogo($('dialogo-carrito'));
     vaciarCarrito();
-    mostrarToast('Pedido enviado por WhatsApp. El carrito quedó vacío para tu próxima compra.');
+    mostrarToastExito('Pedido enviado por WhatsApp. El carrito quedó vacío para tu próxima compra.');
   }
 
   // ---------- Instalación como app (PWA) ----------

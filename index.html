@@ -45,7 +45,7 @@
           <circle cx="10" cy="19.5" r="1.5" fill="currentColor"></circle>
           <circle cx="17" cy="19.5" r="1.5" fill="currentColor"></circle>
         </svg>
-        <span class="badge-carrito" id="contador-carrito">0</span>
+        <span class="badge-carrito" id="contador-carrito" aria-live="polite" aria-atomic="true">0</span>
       </button>
     </header>
   </div>
@@ -191,6 +191,13 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- Icono estático del check de éxito (se clona por JS; sin innerHTML) -->
+  <template id="tpl-check">
+    <svg class="toast-check-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path class="toast-check-trazo" d="M4.5 12.5l4.6 4.6L19.5 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </template>
 
   <noscript>
     <p class="aviso">Activá JavaScript para ver el menú y pedir por WhatsApp.</p>
